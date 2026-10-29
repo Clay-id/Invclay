@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Invclay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+    <style>
+        :root {
+            color-scheme: light
+        }
+
+        body {
+            margin: 0
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%
+        }
+
+        /* Layout: sticky navbar, wide thesis headline, simulated chart panel, projection workbench, signature line, footer */
+        :root {
+            --bg: #EDF0F2;
+            --surface: #F8FAFB;
+            --ink: #101A24;
+            --muted: #56646F;
+            --line: #CFD6DB;
+            --accent: #2447B8;
+            --accent-ink: #FFFFFF;
+            --bar-base: #AEB9C2;
+            --gain: #13795B;
+            --loss: #B3382C;
+            --fd: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+            --fb: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+            --fm: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0E151C;
+                --surface: #151E27;
+                --ink: #E7EDF2;
+                --muted: #93A1AD;
+                --line: #26323D;
+                --accent: #7C9BFF;
+                --accent-ink: #0E151C;
+                --bar-base: #3A4857;
+                --gain: #4CC9A0;
+                --loss: #FF8A7A;
+                color-scheme: dark;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0E151C;
+            --surface: #151E27;
+            --ink: #E7EDF2;
+            --muted: #93A1AD;
+            --line: #26323D;
+            --accent: #7C9BFF;
+            --accent-ink: #0E151C;
+            --bar-base: #3A4857;
+            --gain: #4CC9A0;
+            --loss: #FF8A7A;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--fb);
+            font-size: 16px;
+            line-height: 1.55;
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px));
+            padding-block: 0
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0 0 auto;
+            height: env(safe-area-inset-top, 0px);
+            z-index: 30;
+            background: var(--bg)
+        }
+
+        .wrap {
+            max-width: 1040px;
+            margin: 0 auto
+        }
+
+        a {
+            color: inherit
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px
+        }
+
+        /* navbar */
+        .nav {
+            position: sticky;
+            top: env(safe-area-inset-top, 0px);
+            z-index: 20;
+            background: var(--bg);
+            border-bottom: 1px solid var(--line);
+            margin-left: calc(-1*max(16px, env(safe-area-inset-left, 0px)));
+            margin-right: calc(-1*max(16px, env(safe-area-inset-right, 0px)));
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px))
+        }
+
+        .nav .wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            height: 60px
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: 21px;
+            letter-spacing: -.02em;
+            text-decoration: none
+        }
+
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0
+        }
+
+        .menu>li {
+            position: relative
+        }
+
+        .menu a,
+        .menu button.dd {
+            font: 500 15px var(--fb);
+            color: var(--ink);
+            background: none;
+            border: 0;
+            padding: 9px 11px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .menu a:hover,
+        .menu button.dd:hover,
+        .menu button.dd[aria-expanded="true"] {
+            background: var(--surface)
+        }
+
+        .chev {
+            transition: transform .15s
+        }
+
+        .dd[aria-expanded="true"] .chev {
+            transform: rotate(180deg)
+        }
+
+        .drop {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 170px;
+            list-style: none;
+            margin: 0;
+            padding: 6px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(10, 20, 30, .14)
+        }
+
+        .drop button {
+            width: 100%;
+            text-align: left;
+            font: 500 15px var(--fb);
+            color: var(--ink);
+            background: none;
+            border: 0;
+            padding: 9px 10px;
+            border-radius: 7px;
+            cursor: pointer
+        }
+
+        .drop button:hover {
+            background: var(--bg)
+        }
+
+        .drop .k {
+            font: 400 11px var(--fm);
+            color: var(--muted);
+            margin-left: 8px;
+            letter-spacing: .04em
+        }
+
+        /* hero */
+        .hero {
+            padding-block: 56px 36px
+        }
+
+        h1 {
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: clamp(34px, 6.4vw, 66px);
+            line-height: 1.04;
+            letter-spacing: -.03em;
+            margin: 0;
+            max-width: 16ch;
+            text-wrap: balance
+        }
+
+        .lead {
+            font-size: clamp(17px, 2.2vw, 20px);
+            color: var(--muted);
+            max-width: 56ch;
+            margin: 22px 0 0
+        }
+
+        /* chart panel */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 20px
+        }
+
+        .p-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px 20px
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px
+        }
+
+        .tab {
+            font: 500 14px var(--fb);
+            color: var(--ink);
+            background: none;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 7px 14px;
+            cursor: pointer
+        }
+
+        .tab[aria-pressed="true"] {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--accent-ink)
+        }
+
+        .badge {
+            font: 500 11px var(--fm);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px dashed var(--muted);
+            border-radius: 6px;
+            padding: 4px 8px
+        }
+
+        .read {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 6px 16px;
+            margin: 18px 0 6px
+        }
+
+        .read .big {
+            font: 500 clamp(26px, 4vw, 34px) var(--fm);
+            letter-spacing: -.02em;
+            font-variant-numeric: tabular-nums
+        }
+
+        .read .chg {
+            font: 500 15px var(--fm)
+        }
+
+        .read .sub {
+            font: 400 13px var(--fm);
+            color: var(--muted)
+        }
+
+        .chart {
+            width: 100%;
+            touch-action: pan-y
+        }
+
+        .chart svg {
+            display: block
+        }
+
+        .grid {
+            stroke: var(--line);
+            stroke-width: 1
+        }
+
+        .ax {
+            fill: var(--muted);
+            font: 400 11px var(--fm)
+        }
+
+        .ln {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+            stroke-linejoin: round;
+            stroke-linecap: round
+        }
+
+        .ar {
+            fill: var(--accent);
+            opacity: .12
+        }
+
+        .cross {
+            stroke: var(--muted);
+            stroke-width: 1;
+            stroke-dasharray: 3 3
+        }
+
+        .dot {
+            fill: var(--accent);
+            stroke: var(--surface);
+            stroke-width: 2
+        }
+
+        .note {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 12px 0 0
+        }
+
+        /* signature + footer */
+        .sign {
+            padding-block: 44px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px
+        }
+
+        .sign .n {
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -.01em
+        }
+
+        .sign .d {
+            font: 400 14px var(--fm);
+            color: var(--muted)
+        }
+
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--line);
+            margin-top: 8px;
+            margin-left: calc(-1*max(16px, env(safe-area-inset-left, 0px)));
+            margin-right: calc(-1*max(16px, env(safe-area-inset-right, 0px)));
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px))
+        }
+
+        .f-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+            gap: 32px;
+            padding-block: 44px 32px
+        }
+
+        @media (max-width:640px) {
+            .f-top {
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+            }
+
+            .f-brand {
+                grid-column: 1/-1
+            }
+        }
+
+        .f-brand p {
+            margin: 12px 0 0;
+            max-width: 34ch;
+            font-size: 14px;
+            color: var(--muted)
+        }
+
+        .f-col h3 {
+            font: 500 11px var(--fm);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 0 0 12px
+        }
+
+        .f-col ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 8px
+        }
+
+        .f-col a,
+        .f-col button {
+            font: 400 15px var(--fb);
+            color: var(--ink);
+            background: none;
+            border: 0;
+            padding: 0;
+            cursor: pointer;
+            text-decoration: none
+        }
+
+        .f-col a:hover,
+        .f-col button:hover {
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 3px
+        }
+
+        .f-bot {
+            border-top: 1px solid var(--line);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px 24px;
+            padding-block: 18px 26px;
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        .f-bot p {
+            margin: 0
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                transition: none !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="nav">
+        <div class="wrap">
+            <a class="logo" href="#" aria-label="Invclay">
+                <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+                    <rect x="2" y="14" width="5" height="10" rx="1.5" fill="var(--bar-base)" />
+                    <rect x="10.5" y="8" width="5" height="16" rx="1.5" fill="var(--accent)" />
+                    <rect x="19" y="2" width="5" height="22" rx="1.5" fill="var(--accent)" />
+                </svg>
+                Invclay
+            </a>
+            <ul class="menu">
+                <li>
+                    <button class="dd" id="ddBtn" aria-expanded="false" aria-haspopup="true"
+                        aria-controls="ddMenu">Investasi
+                        <svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                            <path d="M2 4.2 6 8l4-3.8" fill="none" stroke="currentColor" stroke-width="1.6"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <ul class="drop" id="ddMenu" hidden>
+                        <li><button data-asset="us">Saham AS<span class="k">US</span></button></li>
+                        <li><button data-asset="id">Saham RI<span class="k">ID</span></button></li>
+                        <li><button data-asset="crypto">Crypto<span class="k">BTC</span></button></li>
+                    </ul>
+                </li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="misi.html">Misi</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="hero">
+            <h1>Pantau saham AS, ETF, dan crypto dalam satu dashboard.</h1>
+            <p class="lead">Kelola portofolio, hitung potensi keuntungan, dan rencanakan pertumbuhan investasi hingga 10
+                tahun ke depan.</p>
+        </section>
+
+        <section class="panel" id="chart" aria-label="Grafik simulasi">
+            <div class="p-head">
+                <div class="tabs" id="tabs">
+                    <button class="tab" data-asset="us" aria-pressed="true">Saham AS</button>
+                    <button class="tab" data-asset="id" aria-pressed="false">Saham RI</button>
+                    <button class="tab" data-asset="crypto" aria-pressed="false">Crypto</button>
+                </div>
+                <span class="badge">Simulasi</span>
+            </div>
+            <div class="read">
+                <span class="big" id="rVal">0</span>
+                <span class="chg" id="rChg"></span>
+                <span class="sub" id="rSub"></span>
+            </div>
+            <div class="chart" id="chartBox"></div>
+            <p class="note">Grafik ini hanya simulasi acak, bukan data pasar sebenarnya.</p>
+        </section>
+
+        <div class="sign">
+            <span class="n">Alfin Bagus Sadewo</span>
+            <span class="d">29/10/2026, 19:13 WIB</span>
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <div class="f-top">
+                <div class="f-brand">
+                    <a class="logo" href="#" aria-label="Invclay">
+                        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+                            <rect x="2" y="14" width="5" height="10" rx="1.5" fill="var(--bar-base)" />
+                            <rect x="10.5" y="8" width="5" height="16" rx="1.5" fill="var(--accent)" />
+                            <rect x="19" y="2" width="5" height="22" rx="1.5" fill="var(--accent)" />
+                        </svg>
+                        Invclay
+                    </a>
+                    <p>Pantau saham AS, ETF, dan crypto dalam satu dashboard.</p>
+                </div>
+                <nav class="f-col" aria-label="Investasi">
+                    <h3>Investasi</h3>
+                    <ul>
+                        <li><button data-asset="us">Saham AS</button></li>
+                        <li><button data-asset="id">Saham RI</button></li>
+                        <li><button data-asset="crypto">Crypto</button></li>
+                    </ul>
+                </nav>
+                <nav class="f-col" aria-label="Invclay">
+                    <h3>Invclay</h3>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="misi.html">Misi</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="f-bot">
+                <p>&copy; 2026 Invclay</p>
+                <p>Grafik di halaman ini adalah simulasi dan bukan nasihat keuangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var NS = 'http://www.w3.org/2000/svg';
+            var compact = new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 });
+            function el(n, a, p) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e }
+
+            /* dropdown */
+            var ddBtn = document.getElementById('ddBtn'), ddMenu = document.getElementById('ddMenu');
+            function setDd(o) { ddBtn.setAttribute('aria-expanded', o ? 'true' : 'false'); ddMenu.hidden = !o }
+            ddBtn.addEventListener('click', function (e) { e.stopPropagation(); setDd(ddMenu.hidden) });
+            document.addEventListener('click', function (e) { if (!ddMenu.contains(e.target)) setDd(false) });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setDd(false); ddBtn.focus() } });
+
+            /* simulated series */
+            function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+            function gauss(r) { return Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r()) }
+            var assets = {
+                us: { label: 'Indeks Saham AS', tag: 'SIM-US', seed: 11, drift: .0008, vol: .011, dec: 2 },
+                id: { label: 'Indeks Saham RI', tag: 'SIM-ID', seed: 23, drift: .0004, vol: .009, dec: 2 },
+                crypto: { label: 'Koin Crypto', tag: 'SIM-BTC', seed: 7, drift: .0012, vol: .032, dec: 0 }
+            };
+            var N = 120;
+            Object.keys(assets).forEach(function (k) {
+                var a = assets[k], r = rng(a.seed), v = k === 'crypto' ? 42000 : (k === 'id' ? 7200 : 5100), s = [v];
+                for (var i = 1; i < N; i++) { v = v * Math.exp(a.drift + a.vol * gauss(r)); s.push(v) }
+                a.data = s;
+            });
+            var cur = 'us', hover = null;
+            var box = document.getElementById('chartBox');
+            var rVal = document.getElementById('rVal'), rChg = document.getElementById('rChg'), rSub = document.getElementById('rSub');
+            function fmt(v, d) { return v.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d }) }
+            function readout(i) {
+                var a = assets[cur], d = a.data, v = d[i], first = d[0], ch = (v / first - 1) * 100;
+                rVal.textContent = fmt(v, a.dec);
+                rChg.textContent = (ch >= 0 ? '+' : '') + fmt(ch, 2) + '%';
+                rChg.style.color = ch >= 0 ? 'var(--gain)' : 'var(--loss)';
+                rSub.textContent = a.tag + ' · ' + (i === N - 1 ? 'hari ini' : (N - 1 - i) + ' hari lalu');
+            }
+            function drawChart() {
+                var a = assets[cur], d = a.data, W = Math.max(box.clientWidth, 260), H = W < 500 ? 220 : 300;
+                var L = W < 500 ? 46 : 54, R = 10, T = 10, B = 24, iw = W - L - R, ih = H - T - B;
+                var mn = Math.min.apply(null, d), mx = Math.max.apply(null, d), pad = (mx - mn) * .08; mn -= pad; mx += pad;
+                function X(i) { return L + i / (N - 1) * iw } function Y(v) { return T + (1 - (v - mn) / (mx - mn)) * ih }
+                box.innerHTML = '';
+                var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Grafik simulasi ' + a.label }, box);
+                for (var t = 0; t <= 3; t++) {
+                    var tv = mn + (mx - mn) * t / 3, y = Y(tv);
+                    el('line', { x1: L, x2: W - R, y1: y, y2: y, class: 'grid' }, svg);
+                    var lb = el('text', { x: L - 8, y: y + 4, 'text-anchor': 'end', class: 'ax' }, svg); lb.textContent = compact.format(tv);
+                }
+                [[0, 'start', '120 hari lalu'], [Math.round((N - 1) / 2), 'middle', '60 hari lalu'], [N - 1, 'end', 'Hari ini']].forEach(function (p) {
+                    var tx = el('text', { x: X(p[0]), y: H - 6, 'text-anchor': p[1], class: 'ax' }, svg); tx.textContent = p[2];
+                });
+                var pts = d.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1) });
+                el('polygon', { points: X(0) + ',' + (T + ih) + ' ' + pts.join(' ') + ' ' + X(N - 1) + ',' + (T + ih), class: 'ar' }, svg);
+                el('polyline', { points: pts.join(' '), class: 'ln' }, svg);
+                var cl = el('line', { y1: T, y2: T + ih, class: 'cross', visibility: 'hidden' }, svg);
+                var dot = el('circle', { r: 4.5, class: 'dot' }, svg);
+                function place(i) { dot.setAttribute('cx', X(i)); dot.setAttribute('cy', Y(d[i])); cl.setAttribute('x1', X(i)); cl.setAttribute('x2', X(i)); }
+                place(N - 1); readout(N - 1);
+                function move(e) {
+                    var rc = svg.getBoundingClientRect(), x = (e.clientX - rc.left) - L;
+                    var i = Math.max(0, Math.min(N - 1, Math.round(x / iw * (N - 1))));
+                    cl.setAttribute('visibility', 'visible'); place(i); readout(i);
+                }
+                function leave() { cl.setAttribute('visibility', 'hidden'); place(N - 1); readout(N - 1) }
+                svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move); svg.addEventListener('pointerleave', leave);
+            }
+            function setAsset(k) {
+                cur = k;
+                document.querySelectorAll('#tabs .tab').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.asset === k ? 'true' : 'false') });
+                drawChart();
+            }
+            document.querySelectorAll('#tabs .tab').forEach(function (b) { b.addEventListener('click', function () { setAsset(b.dataset.asset) }) });
+            document.querySelectorAll('#ddMenu button, footer [data-asset]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    if (b.dataset.asset === 'us') { location.href = 'saham-as.html'; return }
+                    if (b.dataset.asset === 'id') { location.href = 'saham-ri.html'; return }
+                    if (b.dataset.asset === 'crypto') { location.href = 'crypto.html'; return }
+                    setAsset(b.dataset.asset); setDd(false);
+                    var rm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    document.getElementById('chart').scrollIntoView({ behavior: rm ? 'auto' : 'smooth', block: 'center' });
+                });
+            });
+
+            var tmr; window.addEventListener('resize', function () { clearTimeout(tmr); tmr = setTimeout(drawChart, 80) });
+            drawChart();
+        })();
+    </script>
+</body>
+
+</html>

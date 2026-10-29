@@ -1,0 +1,1880 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Crypto - Invclay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+    <style>
+        /* Layout: navbar, page title, dark summary card + chart, glass folder (add stocks), holdings table, footer */
+        :root {
+            color-scheme: light;
+            --bg: #EDF0F2;
+            --surface: #F8FAFB;
+            --ink: #101A24;
+            --muted: #56646F;
+            --line: #CFD6DB;
+            --accent: #2447B8;
+            --accent-ink: #FFFFFF;
+            --bar-base: #AEB9C2;
+            --gain: #13795B;
+            --loss: #B3382C;
+            --card: #0A1018;
+            --card-ink: #F2F6FA;
+            --card-muted: #8FA0AE;
+            --card-gain: #34D399;
+            --card-loss: #FB7185;
+            --fd: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+            --fb: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+            --fm: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0E151C;
+                --surface: #151E27;
+                --ink: #E7EDF2;
+                --muted: #93A1AD;
+                --line: #26323D;
+                --accent: #7C9BFF;
+                --accent-ink: #0E151C;
+                --bar-base: #3A4857;
+                --gain: #4CC9A0;
+                --loss: #FF8A7A;
+                --card: #060A10;
+                color-scheme: dark;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0E151C;
+            --surface: #151E27;
+            --ink: #E7EDF2;
+            --muted: #93A1AD;
+            --line: #26323D;
+            --accent: #7C9BFF;
+            --accent-ink: #0E151C;
+            --bar-base: #3A4857;
+            --gain: #4CC9A0;
+            --loss: #FF8A7A;
+            --card: #060A10;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        [hidden] {
+            display: none !important
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--fb);
+            font-size: 16px;
+            line-height: 1.55;
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px))
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0 0 auto;
+            height: env(safe-area-inset-top, 0px);
+            z-index: 30;
+            background: var(--bg)
+        }
+
+        .wrap {
+            max-width: 1040px;
+            margin: 0 auto
+        }
+
+        a {
+            color: inherit
+        }
+
+        button {
+            font-family: inherit
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px
+        }
+
+        .bleed {
+            margin-left: calc(-1*max(16px, env(safe-area-inset-left, 0px)));
+            margin-right: calc(-1*max(16px, env(safe-area-inset-right, 0px)));
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px))
+        }
+
+        /* navbar */
+        .nav {
+            position: sticky;
+            top: env(safe-area-inset-top, 0px);
+            z-index: 20;
+            background: var(--bg);
+            border-bottom: 1px solid var(--line)
+        }
+
+        .nav .wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            height: 60px
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: 21px;
+            letter-spacing: -.02em;
+            text-decoration: none
+        }
+
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0
+        }
+
+        .menu>li {
+            position: relative
+        }
+
+        .menu a,
+        .menu button.dd {
+            font: 500 15px var(--fb);
+            color: var(--ink);
+            background: none;
+            border: 0;
+            padding: 9px 11px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .menu a:hover,
+        .menu button.dd:hover,
+        .menu button.dd[aria-expanded="true"] {
+            background: var(--surface)
+        }
+
+        .chev {
+            transition: transform .15s
+        }
+
+        .dd[aria-expanded="true"] .chev {
+            transform: rotate(180deg)
+        }
+
+        .drop {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 170px;
+            list-style: none;
+            margin: 0;
+            padding: 6px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(10, 20, 30, .14)
+        }
+
+        .drop a {
+            width: 100%;
+            justify-content: space-between;
+            padding: 9px 10px;
+            border-radius: 7px
+        }
+
+        .drop a:hover {
+            background: var(--bg)
+        }
+
+        .drop a[aria-current] {
+            color: var(--accent)
+        }
+
+        .drop .k {
+            font: 400 11px var(--fm);
+            color: var(--muted);
+            letter-spacing: .04em
+        }
+
+        /* title */
+        .head {
+            padding-block: 40px 24px
+        }
+
+        .crumb {
+            font: 500 11px var(--fm);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 0 0 10px
+        }
+
+        h1 {
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: clamp(32px, 5.5vw, 54px);
+            line-height: 1.05;
+            letter-spacing: -.03em;
+            margin: 0
+        }
+
+        .lead {
+            color: var(--muted);
+            margin: 12px 0 0;
+            max-width: 56ch
+        }
+
+        /* summary card */
+        .top {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+            gap: 16px
+        }
+
+        @media (max-width:820px) {
+            .top {
+                grid-template-columns: minmax(0, 1fr)
+            }
+        }
+
+        .sum {
+            justify-content: space-between;
+            background: var(--card);
+            color: var(--card-ink);
+            border-radius: 26px;
+            border: 1px solid rgba(255, 255, 255, .07);
+            padding: 24px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .sum::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 26px);
+            pointer-events: none
+        }
+
+        .sum>* {
+            position: relative
+        }
+
+        .sum-main {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px
+        }
+
+        .sum .lab {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            color: var(--card-muted);
+            font-size: 15px
+        }
+
+        .sum .pct {
+            font: 500 14px var(--fm);
+            color: var(--card-gain)
+        }
+
+        .sum .pct.neg {
+            color: var(--card-loss)
+        }
+
+        .sum .pct.zero {
+            color: var(--card-muted)
+        }
+
+        .sum .big {
+            font: 700 clamp(34px, 5vw, 46px)/1.1 var(--fd);
+            letter-spacing: -.02em;
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere
+        }
+
+        .spark {
+            flex: none;
+            width: clamp(120px, 34%, 200px);
+            height: 72px
+        }
+
+        .spark svg {
+            display: block;
+            width: 100%;
+            height: 100%
+        }
+
+        .facts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, .1);
+            padding-top: 16px
+        }
+
+        .fact .l {
+            font: 500 11px var(--fm);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--card-muted)
+        }
+
+        .fact .v {
+            margin-top: 4px;
+            font: 500 15px var(--fm);
+            overflow-wrap: anywhere
+        }
+
+        /* panel */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 20px
+        }
+
+        .p-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px
+        }
+
+        .p-head h2 {
+            font: 700 18px var(--fd);
+            margin: 0;
+            letter-spacing: -.01em
+        }
+
+        .badge {
+            font: 500 11px var(--fm);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px dashed var(--muted);
+            border-radius: 6px;
+            padding: 4px 8px
+        }
+
+        .read {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px 14px;
+            margin: 14px 0 4px;
+            min-height: 34px
+        }
+
+        .read .big {
+            font: 500 clamp(22px, 3.4vw, 28px) var(--fm);
+            letter-spacing: -.02em;
+            font-variant-numeric: tabular-nums
+        }
+
+        .read .sub {
+            font: 400 13px var(--fm);
+            color: var(--muted)
+        }
+
+        .chart {
+            width: 100%;
+            touch-action: pan-y;
+            position: relative
+        }
+
+        .chart svg {
+            display: block
+        }
+
+        .grid {
+            stroke: var(--line);
+            stroke-width: 1
+        }
+
+        .ax {
+            fill: var(--muted);
+            font: 400 11px var(--fm)
+        }
+
+        .ln {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+            stroke-linejoin: round;
+            stroke-linecap: round
+        }
+
+        .ln.cost {
+            stroke: var(--bar-base);
+            stroke-width: 1.5;
+            stroke-dasharray: 5 4
+        }
+
+        .ar {
+            fill: var(--accent);
+            opacity: .12
+        }
+
+        .cross {
+            stroke: var(--muted);
+            stroke-width: 1;
+            stroke-dasharray: 3 3
+        }
+
+        .dot {
+            fill: var(--accent);
+            stroke: var(--surface);
+            stroke-width: 2
+        }
+
+        .empty-t {
+            fill: var(--muted);
+            font: 400 13px var(--fb)
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 10px
+        }
+
+        .legend i {
+            display: inline-block;
+            width: 14px;
+            height: 0;
+            border-top: 2px solid var(--accent);
+            margin-right: 6px;
+            vertical-align: 3px
+        }
+
+        .legend i.c {
+            border-top: 2px dashed var(--bar-base)
+        }
+
+        .note {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 10px 0 0
+        }
+
+        /* folder section */
+        .sec {
+            padding-block: 44px 0
+        }
+
+        h2.t {
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: clamp(24px, 3.6vw, 32px);
+            line-height: 1.1;
+            letter-spacing: -.02em;
+            margin: 0 0 8px
+        }
+
+        .folder-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px 40px;
+            align-items: flex-start
+        }
+
+        .folder-box {
+            flex: 0 1 380px;
+            width: 100%;
+            max-width: 380px;
+            min-width: 0
+        }
+
+        .folder-hint {
+            flex: 1 1 240px;
+            min-width: 0;
+            color: var(--muted);
+            font-size: 15px;
+            padding-top: 40px
+        }
+
+        .folder-hint ol {
+            margin: 10px 0 0;
+            padding-left: 20px;
+            display: grid;
+            gap: 6px
+        }
+
+        /* glass folder (ported) */
+        .gf-root {
+            --k: 1;
+            --gf-px: 0;
+            --gf-py: 0;
+            --gf-ease: cubic-bezier(.2, .8, .2, 1);
+            --gf-spring: cubic-bezier(.34, 1.36, .5, 1);
+            --gf-hinge: 0deg;
+            --gf-lift: 42px;
+            --gf-spread: 0px;
+            --gf-fan: 0deg;
+            --gf-stack: 15px;
+            --gf-ink: #141416;
+            --gf-ink-soft: rgba(20, 20, 22, .55);
+            position: relative;
+            width: calc(340px*var(--k));
+            height: calc(326px*var(--k));
+            isolation: isolate;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        .gf-root:hover,
+        .gf-root:focus-within {
+            --gf-hinge: -11deg;
+            --gf-lift: -34px;
+            --gf-spread: 8px;
+            --gf-fan: 1.4deg;
+            --gf-stack: 10px
+        }
+
+        .gf-root[data-open] {
+            --gf-hinge: -24deg;
+            --gf-lift: -96px;
+            --gf-spread: 40px;
+            --gf-fan: 5deg;
+            --gf-stack: 30px
+        }
+
+        .gf-stage {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 340px;
+            height: 272px;
+            transform-origin: 0 0;
+            transform: translateY(calc(54px*var(--k))) scale(var(--k))
+        }
+
+        .gf-tilt {
+            position: absolute;
+            inset: 0;
+            transform: perspective(1400px) rotateX(calc(var(--gf-py)*-3deg)) rotateY(calc(var(--gf-px)*4deg));
+            transition: transform .9s var(--gf-ease)
+        }
+
+        .gf-shadow {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: -6px;
+            height: 60px;
+            border-radius: 40px;
+            background: rgba(16, 18, 24, .34);
+            filter: blur(22px);
+            transform: translateX(calc(var(--gf-px)*-8px))
+        }
+
+        .gf-back {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            clip-path: path('M0 56A22 22 0 0 1 22 34L146 34C170 34 172 0 198 0L318 0A22 22 0 0 1 340 22L340 250A22 22 0 0 1 318 272L22 272A22 22 0 0 1 0 250Z');
+            background: linear-gradient(180deg, #f3f3f4, #e3e3e6)
+        }
+
+        .gf-art {
+            position: absolute;
+            inset: -14px;
+            transform: translate(calc(var(--gf-px)*-7px), calc(var(--gf-py)*-6px)) scale(1.04);
+            transition: transform 1.1s var(--gf-ease);
+            background:
+                radial-gradient(60% 70% at 18% 20%, #B58CFF 0%, transparent 62%),
+                radial-gradient(55% 65% at 85% 25%, #3B1D7A 0%, transparent 65%),
+                radial-gradient(70% 60% at 60% 95%, #FF9F43 0%, transparent 60%),
+                radial-gradient(50% 60% at 10% 90%, #1A0F3A 0%, transparent 62%),
+                linear-gradient(135deg, #2A1659, #100A26)
+        }
+
+        .gf-art::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(115deg, rgba(255, 255, 255, .06) 0 1px, transparent 1px 7px);
+            mix-blend-mode: soft-light
+        }
+
+        .gf-sheen {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 22%);
+            pointer-events: none
+        }
+
+        .gf-rim {
+            position: absolute;
+            left: 0;
+            top: 0;
+            overflow: visible;
+            pointer-events: none;
+            fill: none
+        }
+
+        .gf-rim path {
+            stroke: rgba(255, 255, 255, .45);
+            stroke-width: 1
+        }
+
+        .gf-files {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+            clip-path: inset(-400px -400px 10px -400px)
+        }
+
+        .gf-sheet {
+            all: unset;
+            box-sizing: border-box;
+            position: absolute;
+            left: 34px;
+            top: 96px;
+            width: 272px;
+            height: 184px;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 0 0 .5px rgba(0, 0, 0, .1), 0 10px 26px -8px rgba(10, 12, 20, .28);
+            transform-origin: 50% 100%;
+            transform: translate(calc(var(--jx) + var(--slot)*var(--gf-spread)), calc(var(--gf-lift) + var(--depth)*var(--gf-stack)*-1)) rotate(calc(var(--jr) + var(--slot)*var(--gf-fan)));
+            transition: transform .75s var(--gf-spring) calc(var(--depth)*40ms), box-shadow .4s var(--gf-ease)
+        }
+
+        .gf-root[data-open] .gf-sheet:hover,
+        .gf-root[data-open] .gf-sheet:focus-visible {
+            transform: translate(calc(var(--jx) + var(--slot)*var(--gf-spread)), calc(var(--gf-lift) + var(--depth)*var(--gf-stack)*-1 - 18px)) rotate(calc(var(--slot)*var(--gf-fan)*.6));
+            box-shadow: 0 22px 40px -12px rgba(10, 12, 20, .42);
+            transition-delay: 0s
+        }
+
+        .gf-sheet:focus-visible {
+            outline: 2px solid #4c8dff;
+            outline-offset: 2px
+        }
+
+        .gf-sheet[aria-pressed="true"] {
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2447B8, 0 14px 30px -10px rgba(10, 12, 20, .5)
+        }
+
+        .gf-sheet-art {
+            position: absolute;
+            inset: 0
+        }
+
+        .gf-sheet-art::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, .42), rgba(0, 0, 0, 0) 40%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2)
+        }
+
+        .gf-sheet-head {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            top: 11px;
+            z-index: 1;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            white-space: nowrap;
+            color: #fff
+        }
+
+        .gf-sheet-name {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .01em
+        }
+
+        .gf-sheet-meta {
+            font: 400 10.5px var(--fm);
+            color: rgba(255, 255, 255, .75)
+        }
+
+        .gf-sheet-big {
+            position: absolute;
+            left: 14px;
+            bottom: 12px;
+            z-index: 1;
+            color: #fff;
+            font: 500 22px var(--fm);
+            letter-spacing: -.02em
+        }
+
+        .gf-front {
+            position: absolute;
+            left: 0;
+            top: 74px;
+            width: 340px;
+            height: 198px;
+            z-index: 10;
+            -webkit-backdrop-filter: blur(22px) saturate(1.5);
+            backdrop-filter: blur(22px) saturate(1.5);
+            clip-path: path('M0 22A22 22 0 0 1 22 0L118 0C144 0 146 32 172 32L318 32A22 22 0 0 1 340 54L340 176A22 22 0 0 1 318 198L22 198A22 22 0 0 1 0 176Z');
+            transform-origin: 50% 100%;
+            transform: perspective(760px) rotateX(var(--gf-hinge));
+            transition: transform .8s var(--gf-spring)
+        }
+
+        .gf-front.bump {
+            animation: gf-bump .7s var(--gf-ease) both
+        }
+
+        @keyframes gf-bump {
+            0% {
+                scale: 1
+            }
+
+            35% {
+                scale: 1.018 .975
+            }
+
+            70% {
+                scale: .996 1.006
+            }
+
+            100% {
+                scale: 1
+            }
+        }
+
+        .gf-tint {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .5) 42%, rgba(252, 252, 252, .93))
+        }
+
+        .gf-spec {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(260px 200px at calc(50% + var(--gf-px)*46%) calc(30% + var(--gf-py)*40%), rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 70%);
+            mix-blend-mode: soft-light;
+            pointer-events: none
+        }
+
+        .gf-front-rim {
+            width: 340px;
+            height: 198px
+        }
+
+        .gf-front-rim path {
+            stroke: url(#rimg);
+            stroke-width: 2.4
+        }
+
+        .gf-hit {
+            all: unset;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            cursor: pointer
+        }
+
+        .gf-hit:focus-visible~.gf-label .gf-title {
+            text-decoration: underline;
+            text-underline-offset: 4px
+        }
+
+        .gf-label {
+            position: absolute;
+            z-index: 2;
+            left: 28px;
+            bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 200px;
+            pointer-events: none;
+            color: var(--gf-ink)
+        }
+
+        .gf-title {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.15;
+            letter-spacing: -.012em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .gf-meta {
+            font: 400 12px var(--fm);
+            letter-spacing: .03em;
+            color: var(--gf-ink-soft);
+            white-space: nowrap
+        }
+
+        .gf-key {
+            all: unset;
+            box-sizing: border-box;
+            position: absolute;
+            right: 22px;
+            bottom: 22px;
+            z-index: 12;
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: #fff;
+            background: radial-gradient(120% 90% at 50% 0%, #3a3a3f, #121214 55%, #050506);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -3px 8px rgba(0, 0, 0, .7), 0 0 0 1px rgba(0, 0, 0, .75), 0 14px 22px -8px rgba(0, 0, 0, .55);
+            transition: transform .35s var(--gf-spring)
+        }
+
+        .gf-key:hover {
+            transform: translateY(-2px)
+        }
+
+        .gf-key:active {
+            transform: scale(.93);
+            transition-duration: .12s
+        }
+
+        .gf-key:focus-visible {
+            outline: 2px solid #4c8dff;
+            outline-offset: 3px
+        }
+
+        .gf-key svg {
+            width: 26px;
+            height: 26px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.6;
+            stroke-linecap: round
+        }
+
+        /* holdings */
+        .hold {
+            margin-top: 16px
+        }
+
+        .tbl {
+            width: 100%;
+            overflow-x: auto
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 520px;
+            font-size: 14px
+        }
+
+        th {
+            font: 500 11px var(--fm);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        td {
+            padding: 11px 10px;
+            border-bottom: 1px solid var(--line);
+            font-variant-numeric: tabular-nums
+        }
+
+        td.n,
+        th.n {
+            text-align: right
+        }
+
+        td .tk {
+            font: 600 14px var(--fm)
+        }
+
+        tr.sel td {
+            background: color-mix(in srgb, var(--accent) 8%, transparent)
+        }
+
+        .pos {
+            color: var(--gain)
+        }
+
+        .neg {
+            color: var(--loss)
+        }
+
+        .xbtn {
+            font: 500 13px var(--fb);
+            color: var(--muted);
+            background: none;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            padding: 5px 10px;
+            cursor: pointer
+        }
+
+        .xbtn:hover {
+            color: var(--loss);
+            border-color: var(--loss)
+        }
+
+        .emptyrow {
+            color: var(--muted);
+            padding: 18px 10px;
+            font-size: 14px
+        }
+
+        /* dialog */
+        .ov {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: rgba(6, 10, 16, .55);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            display: grid;
+            place-items: center;
+            padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+            overflow-y: auto
+        }
+
+        .dlg {
+            width: 100%;
+            max-width: 860px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+            gap: 26px;
+            animation: rise .35s cubic-bezier(.34, 1.36, .5, 1)
+        }
+
+        @media (max-width:760px) {
+            .dlg {
+                grid-template-columns: minmax(0, 1fr)
+            }
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .dlg h3 {
+            font: 700 24px var(--fd);
+            letter-spacing: -.02em;
+            margin: 0 0 4px
+        }
+
+        .dlg .sub {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0 0 18px
+        }
+
+        .fld {
+            margin-bottom: 14px
+        }
+
+        .fld label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px
+        }
+
+        .fld input {
+            width: 100%;
+            font: 500 16px var(--fm);
+            color: var(--ink);
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 11px 12px
+        }
+
+        .fld input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)
+        }
+
+        .fld .hint {
+            font: 400 12px var(--fm);
+            color: var(--muted);
+            margin-top: 5px
+        }
+
+        .err {
+            color: var(--loss);
+            font-size: 13px;
+            min-height: 19px;
+            margin: 0 0 6px
+        }
+
+        .btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .btn {
+            font: 600 15px var(--fb);
+            border-radius: 10px;
+            padding: 11px 18px;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: none;
+            color: var(--ink)
+        }
+
+        .btn.pri {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--accent-ink)
+        }
+
+        .btn:hover {
+            filter: brightness(1.06)
+        }
+
+        /* 3D calendar */
+        .stage3d {
+            perspective: 900px;
+            display: grid;
+            place-items: center;
+            padding: 8px 0 28px;
+            min-width: 0
+        }
+
+        .cal3d {
+            width: min(100%, 330px);
+            transform-style: preserve-3d;
+            transform: rotateX(22deg) rotateY(-16deg);
+            transition: transform .7s cubic-bezier(.34, 1.36, .5, 1)
+        }
+
+        .cal3d.pop {
+            transform: rotateX(8deg) rotateY(-5deg) translateZ(70px) scale(1.06)
+        }
+
+        .cal-card {
+            position: relative;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 0 0 14px;
+            box-shadow: 0 14px 24px -14px rgba(10, 20, 30, .5);
+            transform-style: preserve-3d;
+            transition: box-shadow .7s
+        }
+
+        .cal3d.pop .cal-card {
+            box-shadow: 0 40px 60px -18px rgba(10, 20, 30, .55), 0 10px 20px -10px rgba(10, 20, 30, .4)
+        }
+
+        .cal-top {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border-radius: 17px 17px 0 0;
+            padding: 14px 16px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            position: relative
+        }
+
+        .cal-top .m {
+            font: 700 17px var(--fd);
+            letter-spacing: -.01em
+        }
+
+        .cal-top button {
+            all: unset;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            color: inherit
+        }
+
+        .cal-top button:hover {
+            background: rgba(255, 255, 255, .2)
+        }
+
+        .cal-top button:focus-visible {
+            outline: 2px solid currentColor
+        }
+
+        .rings {
+            position: absolute;
+            top: -8px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-evenly;
+            pointer-events: none;
+            transform: translateZ(14px)
+        }
+
+        .rings i {
+            width: 8px;
+            height: 20px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #9aa6b0, #f1f4f6 50%, #8996a1);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, .35)
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 2px;
+            padding: 10px 12px 0
+        }
+
+        .cal-grid .dn {
+            font: 500 10px var(--fm);
+            color: var(--muted);
+            text-align: center;
+            padding: 4px 0;
+            text-transform: uppercase;
+            letter-spacing: .04em
+        }
+
+        .cal-grid button {
+            all: unset;
+            box-sizing: border-box;
+            text-align: center;
+            font: 500 13px var(--fm);
+            padding: 7px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--ink)
+        }
+
+        .cal-grid button:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--accent) 14%, transparent)
+        }
+
+        .cal-grid button:focus-visible {
+            outline: 2px solid var(--accent)
+        }
+
+        .cal-grid button:disabled {
+            color: var(--muted);
+            opacity: .35;
+            cursor: default
+        }
+
+        .cal-grid button[aria-pressed="true"] {
+            background: var(--accent);
+            color: var(--accent-ink);
+            font-weight: 600
+        }
+
+        .cal-grid button.today {
+            box-shadow: inset 0 0 0 1px var(--muted)
+        }
+
+        .pick {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 12px 16px 0;
+            font: 500 12px var(--fm);
+            color: var(--muted)
+        }
+
+        .pick b {
+            color: var(--ink);
+            font-size: 14px
+        }
+
+        .cal-chart {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: -26px;
+            height: 70px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 6px 8px;
+            transform: translateZ(0px);
+            transition: transform .7s cubic-bezier(.34, 1.36, .5, 1), opacity .4s;
+            opacity: .0;
+            box-shadow: 0 20px 30px -14px rgba(10, 20, 30, .5)
+        }
+
+        .cal3d.pop .cal-chart {
+            transform: translateZ(60px) translateY(8px);
+            opacity: 1
+        }
+
+        .cal-chart svg {
+            display: block;
+            width: 100%;
+            height: 100%
+        }
+
+        .cal-chart .cl {
+            position: absolute;
+            left: 10px;
+            top: 4px;
+            font: 500 10px var(--fm);
+            color: var(--muted)
+        }
+
+        /* footer */
+        .sign {
+            padding-block: 44px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px
+        }
+
+        .sign .n {
+            font-family: var(--fd);
+            font-weight: 700;
+            font-size: 20px
+        }
+
+        .sign .d {
+            font: 400 14px var(--fm);
+            color: var(--muted)
+        }
+
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--line)
+        }
+
+        .f-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+            gap: 32px;
+            padding-block: 44px 32px
+        }
+
+        @media (max-width:640px) {
+            .f-top {
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+            }
+
+            .f-brand {
+                grid-column: 1/-1
+            }
+        }
+
+        .f-brand p {
+            margin: 12px 0 0;
+            max-width: 34ch;
+            font-size: 14px;
+            color: var(--muted)
+        }
+
+        .f-col h4 {
+            font: 500 11px var(--fm);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 0 0 12px
+        }
+
+        .f-col ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 8px
+        }
+
+        .f-col a {
+            font: 400 15px var(--fb);
+            text-decoration: none
+        }
+
+        .f-col a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 3px
+        }
+
+        .f-bot {
+            border-top: 1px solid var(--line);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px 24px;
+            padding-block: 18px 26px;
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        .f-bot p {
+            margin: 0
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            * {
+                transition-duration: 0s !important;
+                animation: none !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="nav bleed">
+        <div class="wrap">
+            <a class="logo" href="index.html" aria-label="Invclay">
+                <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+                    <rect x="2" y="14" width="5" height="10" rx="1.5" fill="var(--bar-base)" />
+                    <rect x="10.5" y="8" width="5" height="16" rx="1.5" fill="var(--accent)" />
+                    <rect x="19" y="2" width="5" height="22" rx="1.5" fill="var(--accent)" />
+                </svg>
+                Invclay
+            </a>
+            <ul class="menu">
+                <li>
+                    <button class="dd" id="ddBtn" aria-expanded="false" aria-haspopup="true"
+                        aria-controls="ddMenu">Investasi
+                        <svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                            <path d="M2 4.2 6 8l4-3.8" fill="none" stroke="currentColor" stroke-width="1.6"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <ul class="drop" id="ddMenu" hidden>
+                        <li><a href="saham-as.html">Saham AS<span class="k">US</span></a></li>
+                        <li><a href="saham-ri.html">Saham RI<span class="k">ID</span></a></li>
+                        <li><a href="crypto.html" aria-current="page">Crypto<span class="k">BTC</span></a></li>
+                    </ul>
+                </li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="misi.html">Misi</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="head">
+            <p class="crumb">Investasi / Crypto</p>
+            <h1>Portofolio Crypto</h1>
+            <p class="lead">Catat modal, koin, dan tanggal mulai. Grafik dihitung dari simulasi, bukan harga pasar
+                sebenarnya.</p>
+        </section>
+
+        <section class="top">
+            <div class="sum" aria-live="polite">
+                <div class="sum-main">
+                    <div style="min-width:0">
+                        <div class="lab"><span>Total modal</span><span class="pct zero" id="sPct">0%</span></div>
+                        <div class="big" id="sBig">$0</div>
+                    </div>
+                    <div class="spark" id="spark" aria-hidden="true"></div>
+                </div>
+                <div class="facts">
+                    <div class="fact">
+                        <div class="l">Mulai</div>
+                        <div class="v" id="fStart">-</div>
+                    </div>
+                    <div class="fact">
+                        <div class="l">Koin</div>
+                        <div class="v" id="fStocks">Belum ada</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="p-head">
+                    <h2 id="cTitle">Nilai portofolio</h2><span class="badge">Simulasi</span>
+                </div>
+                <div class="read"><span class="big" id="rVal">$0</span><span class="sub" id="rSub"></span></div>
+                <div class="chart" id="chartBox"></div>
+                <div class="legend"><span><i></i>Nilai simulasi</span><span><i class="c"></i>Modal disetor</span></div>
+            </div>
+        </section>
+
+        <section class="sec">
+            <h2 class="t">Tambah koin</h2>
+            <div class="folder-row">
+                <div class="folder-box" id="folderBox">
+                    <div class="gf-root" id="gf" style="--k:1">
+                        <div class="gf-stage">
+                            <div class="gf-tilt">
+                                <div class="gf-shadow" aria-hidden="true"></div>
+                                <div class="gf-back" aria-hidden="true">
+                                    <div class="gf-art"></div>
+                                    <div class="gf-sheen"></div>
+                                </div>
+                                <svg class="gf-rim" width="340" height="272" viewBox="0 0 340 272" aria-hidden="true">
+                                    <path
+                                        d="M0 56A22 22 0 0 1 22 34L146 34C170 34 172 0 198 0L318 0A22 22 0 0 1 340 22L340 250A22 22 0 0 1 318 272L22 272A22 22 0 0 1 0 250Z" />
+                                </svg>
+                                <div class="gf-front" id="gfFront">
+                                    <div class="gf-tint" aria-hidden="true"></div>
+                                    <div class="gf-spec" aria-hidden="true"></div>
+                                    <svg class="gf-rim gf-front-rim" viewBox="0 0 340 198" aria-hidden="true">
+                                        <defs>
+                                            <linearGradient id="rimg" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0" stop-color="#fff" stop-opacity=".95" />
+                                                <stop offset=".35" stop-color="#fff" stop-opacity=".35" />
+                                                <stop offset="1" stop-color="#fff" stop-opacity=".12" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path
+                                            d="M0 22A22 22 0 0 1 22 0L118 0C144 0 146 32 172 32L318 32A22 22 0 0 1 340 54L340 176A22 22 0 0 1 318 198L22 198A22 22 0 0 1 0 176Z"
+                                            fill="none" />
+                                    </svg>
+                                    <button class="gf-hit" id="gfHit" type="button" aria-expanded="false"
+                                        aria-label="Buka folder portofolio"></button>
+                                    <div class="gf-label"><span class="gf-title">Crypto</span><span class="gf-meta"
+                                            id="gfMeta">0 koin</span></div>
+                                </div>
+                                <div class="gf-files" id="gfFiles" role="list" aria-label="Koin di portofolio"></div>
+                                <button class="gf-key" id="gfAdd" type="button" aria-label="Tambah koin"><svg
+                                        viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M12 4.5v15M4.5 12h15" />
+                                    </svg></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="folder-hint">
+                    <strong style="color:var(--ink)">Cara pakai</strong>
+                    <ol>
+                        <li>Klik tombol <b>+</b> pada folder.</li>
+                        <li>Isi nama koin, modal, dan tanggal mulai di kalender.</li>
+                        <li>Klik folder untuk membukanya, lalu pilih koin untuk melihat grafiknya sendiri.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="panel hold">
+                <div class="p-head">
+                    <h2>Daftar koin</h2>
+                </div>
+                <div class="tbl">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Koin</th>
+                                <th>Mulai</th>
+                                <th class="n">Modal</th>
+                                <th class="n">Nilai simulasi</th>
+                                <th class="n">Hasil</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="rows"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <div class="sign">
+            <span class="n">Alfin Bagus Sadewo</span>
+            <span class="d">29/10/2026, 19:13 WIB</span>
+        </div>
+    </main>
+
+    <footer class="bleed">
+        <div class="wrap">
+            <div class="f-top">
+                <div class="f-brand">
+                    <a class="logo" href="index.html" aria-label="Invclay">
+                        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+                            <rect x="2" y="14" width="5" height="10" rx="1.5" fill="var(--bar-base)" />
+                            <rect x="10.5" y="8" width="5" height="16" rx="1.5" fill="var(--accent)" />
+                            <rect x="19" y="2" width="5" height="22" rx="1.5" fill="var(--accent)" />
+                        </svg>
+                        Invclay
+                    </a>
+                    <p>Pantau saham AS, ETF, dan crypto dalam satu dashboard.</p>
+                </div>
+                <nav class="f-col" aria-label="Investasi">
+                    <h4>Investasi</h4>
+                    <ul>
+                        <li><a href="saham-as.html">Saham AS</a></li>
+                        <li><a href="saham-ri.html">Saham RI</a></li>
+                        <li><a href="crypto.html">Crypto</a></li>
+                    </ul>
+                </nav>
+                <nav class="f-col" aria-label="Invclay">
+                    <h4>Invclay</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="misi.html">Misi</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="f-bot">
+                <p>&copy; 2026 Invclay</p>
+                <p>Grafik di halaman ini adalah simulasi dan bukan nasihat keuangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- dialog tambah koin -->
+    <div class="ov" id="ov" hidden>
+        <form class="dlg" id="form" role="dialog" aria-modal="true" aria-labelledby="dTitle" novalidate>
+            <div>
+                <h3 id="dTitle">Tambah koin</h3>
+                <p class="sub">Semua angka dalam dolar AS. Pasar crypto buka 24 jam.</p>
+                <div class="fld"><label for="fName">Nama koin</label><input id="fName" list="tickers" placeholder="BTC"
+                        autocomplete="off" maxlength="12" style="text-transform:uppercase">
+                    <datalist id="tickers">
+                        <option value="BTC">
+                        <option value="ETH">
+                        <option value="SOL">
+                        <option value="BNB">
+                        <option value="XRP">
+                        <option value="DOGE">
+                        <option value="ADA">
+                        <option value="AVAX">
+                        <option value="LINK">
+                        <option value="TON">
+                    </datalist>
+                </div>
+                <div class="fld"><label for="fMod">Modal</label><input id="fMod" type="number" inputmode="decimal"
+                        min="1" step="any" placeholder="1000">
+                    <div class="hint">Kalender di samping akan menonjol saat kamu mengisi modal.</div>
+                </div>
+                <div class="fld"><label for="fDate">Tanggal mulai</label><input id="fDate" type="text" readonly
+                        aria-describedby="dHint">
+                    <div class="hint" id="dHint">Pilih tanggal pada kalender.</div>
+                </div>
+                <p class="err" id="err" role="alert"></p>
+                <div class="btns"><button class="btn pri" type="submit">Simpan</button><button class="btn" type="button"
+                        id="cancel">Batal</button></div>
+            </div>
+            <div class="stage3d" aria-label="Kalender tanggal mulai">
+                <div class="cal3d" id="cal3d">
+                    <div class="cal-card">
+                        <div class="rings" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+                        <div class="cal-top">
+                            <button type="button" id="prev" aria-label="Bulan sebelumnya"><svg width="14" height="14"
+                                    viewBox="0 0 14 14">
+                                    <path d="M9 2 4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg></button>
+                            <span class="m" id="calMonth"></span>
+                            <button type="button" id="next" aria-label="Bulan berikutnya"><svg width="14" height="14"
+                                    viewBox="0 0 14 14">
+                                    <path d="m5 2 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg></button>
+                        </div>
+                        <div class="cal-grid" id="calGrid"></div>
+                        <div class="pick"><span>Mulai</span><b id="pickTxt">-</b></div>
+                        <div class="cal-chart" id="calChart" aria-hidden="true"></div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        (function () {
+            var NS = 'http://www.w3.org/2000/svg', DAY = 86400000;
+            function $(i) { return document.getElementById(i) }
+            function el(n, a, p) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e }
+            var usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+            var usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+            var MON = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            var MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            var DN = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+            /* dates as day numbers (local) */
+            function dnum(y, m, d) { return Math.round(Date.UTC(y, m, d) / DAY) }
+            var now = new Date(), TODAY = dnum(now.getFullYear(), now.getMonth(), now.getDate());
+            function parts(n) { var d = new Date(n * DAY); return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate() } }
+            function iso(n) { var p = parts(n); return p.y + '-' + String(p.m + 1).padStart(2, '0') + '-' + String(p.d).padStart(2, '0') }
+            function fromIso(s) { var a = s.split('-'); return dnum(+a[0], +a[1] - 1, +a[2]) }
+            function fmtDate(n) { var p = parts(n); return p.d + ' ' + MON3[p.m] + ' ' + p.y }
+            function fmtShort(n) { var p = parts(n); return p.d + ' ' + MON3[p.m] }
+
+            /* deterministic simulated price by ticker */
+            function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++)h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
+            function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+            var EPOCH = dnum(2020, 0, 1), cache = {};
+            function prices(t) {
+                if (cache[t]) return cache[t];
+                var r = rng(hash(t)), n = TODAY - EPOCH + 1, p = [100], drift = .0004 + r() * .0012, vol = .028 + r() * .03;
+                for (var i = 1; i < n; i++) { var g = Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r()); p.push(p[i - 1] * Math.exp(drift + vol * g)) }
+                return cache[t] = p;
+            }
+            function valueAt(h, day) { var p = prices(h.t); return h.m * p[day - EPOCH] / p[h.s - EPOCH] }
+
+            /* state */
+            var hold = [], sel = null, KEY = 'invclay-crypto';
+            try { var raw = localStorage.getItem(KEY); if (raw) { hold = JSON.parse(raw).filter(function (h) { return h && h.t && h.m > 0 && h.s }) } } catch (e) { }
+            function save() { try { localStorage.setItem(KEY, JSON.stringify(hold)) } catch (e) { } }
+            var uid = Date.now();
+
+            /* series for chart */
+            function series(list) {
+                if (!list.length) return null;
+                var first = Math.min.apply(null, list.map(function (h) { return h.s }));
+                var from = Math.min(first, TODAY - 13), pts = [];
+                for (var d = from; d <= TODAY; d++) {
+                    if (d < first) { pts.push({ d: d, v: null, c: null }); continue }
+                    var v = 0, c = 0; list.forEach(function (h) { if (h.s <= d) { v += valueAt(h, d); c += h.m } });
+                    pts.push({ d: d, v: v, c: c });
+                }
+                return { from: from, first: first, pts: pts };
+            }
+            function nice(mn, mx) { if (mx - mn < 1e-9) { var p = Math.max(1, Math.abs(mx) * .05); return [mn - p, mx + p] } var pad = (mx - mn) * .12; return [mn - pad, mx + pad] }
+            function compact(v) { return v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'k' : v.toFixed(0) }
+
+            /* main chart */
+            var box = $('chartBox'), rVal = $('rVal'), rSub = $('rSub');
+            function active() { return sel ? hold.filter(function (h) { return h.id === sel }) : hold }
+            function drawChart() {
+                var list = active(), S = series(list), W = Math.max(box.clientWidth, 240), H = W < 500 ? 210 : 280, L = 50, R = 10, T = 10, B = 24, iw = W - L - R, ih = H - T - B;
+                box.innerHTML = '';
+                var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Grafik simulasi nilai portofolio' }, box);
+                $('cTitle').textContent = sel && list[0] ? list[0].t : 'Nilai portofolio';
+                if (!S) {
+                    for (var t = 0; t <= 3; t++) { var y = T + ih * t / 3; el('line', { x1: L, x2: W - R, y1: y, y2: y, class: 'grid' }, svg); var lb = el('text', { x: L - 8, y: y + 4, 'text-anchor': 'end', class: 'ax' }, svg); lb.textContent = compact(1000 * (3 - t) / 3) }
+                    el('line', { x1: L, x2: W - R, y1: T + ih * .62, y2: T + ih * .62, stroke: 'var(--muted)', 'stroke-width': 1.5, 'stroke-dasharray': '6 6' }, svg);
+                    var et = el('text', { x: L + iw / 2, y: T + ih * .62 - 12, 'text-anchor': 'middle', class: 'empty-t' }, svg); et.textContent = 'Belum ada investasi. Klik + pada folder untuk menambah.';
+                    rVal.textContent = '$0'; rSub.textContent = 'Kosong'; return;
+                }
+                var pts = S.pts, N = pts.length, vals = [];
+                pts.forEach(function (p) { if (p.v != null) { vals.push(p.v, p.c) } });
+                var r2 = nice(Math.min.apply(null, vals), Math.max.apply(null, vals)), mn = r2[0], mx = r2[1];
+                function X(i) { return L + i / (N - 1) * iw } function Y(v) { return T + (1 - (v - mn) / (mx - mn)) * ih }
+                for (var t2 = 0; t2 <= 3; t2++) { var tv = mn + (mx - mn) * t2 / 3, yy = Y(tv); el('line', { x1: L, x2: W - R, y1: yy, y2: yy, class: 'grid' }, svg); var l2 = el('text', { x: L - 8, y: yy + 4, 'text-anchor': 'end', class: 'ax' }, svg); l2.textContent = '$' + compact(tv) }
+                [[0, 'start'], [Math.round((N - 1) / 2), 'middle'], [N - 1, 'end']].forEach(function (q) { var tx = el('text', { x: X(q[0]), y: H - 6, 'text-anchor': q[1], class: 'ax' }, svg); tx.textContent = fmtShort(pts[q[0]].d) });
+                var vs = [], cs = [], firstIdx = pts.findIndex(function (p) { return p.v != null });
+                pts.forEach(function (p, i) { if (p.v != null) { vs.push(X(i).toFixed(1) + ',' + Y(p.v).toFixed(1)); cs.push(X(i).toFixed(1) + ',' + Y(p.c).toFixed(1)) } });
+                if (vs.length > 1) {
+                    el('polygon', { points: X(firstIdx) + ',' + (T + ih) + ' ' + vs.join(' ') + ' ' + X(N - 1) + ',' + (T + ih), class: 'ar' }, svg);
+                    el('polyline', { points: cs.join(' '), class: 'ln cost' }, svg);
+                    el('polyline', { points: vs.join(' '), class: 'ln' }, svg);
+                }
+                var cl = el('line', { y1: T, y2: T + ih, class: 'cross', visibility: 'hidden' }, svg), dot = el('circle', { r: 4.5, class: 'dot' }, svg);
+                function show(i) {
+                    if (i < firstIdx) i = firstIdx; var p = pts[i];
+                    dot.setAttribute('cx', X(i)); dot.setAttribute('cy', Y(p.v)); cl.setAttribute('x1', X(i)); cl.setAttribute('x2', X(i));
+                    var g = p.c ? (p.v / p.c - 1) * 100 : 0;
+                    rVal.textContent = usd.format(p.v); rSub.textContent = fmtDate(p.d) + ' · ' + (g >= 0 ? '+' : '') + g.toFixed(2) + '% dari modal';
+                }
+                show(N - 1);
+                function mv(e) { var rc = svg.getBoundingClientRect(), i = Math.max(0, Math.min(N - 1, Math.round(((e.clientX - rc.left) - L) / iw * (N - 1)))); cl.setAttribute('visibility', 'visible'); show(i) }
+                svg.addEventListener('pointermove', mv); svg.addEventListener('pointerdown', mv);
+                svg.addEventListener('pointerleave', function () { cl.setAttribute('visibility', 'hidden'); show(N - 1) });
+            }
+
+            /* summary card + sparkline */
+            function drawSummary() {
+                var S = series(hold), total = hold.reduce(function (a, h) { return a + h.m }, 0);
+                $('sBig').textContent = usd.format(total);
+                var pct = $('sPct'), sp = $('spark'); sp.innerHTML = '';
+                $('fStocks').textContent = hold.length ? hold.map(function (h) { return h.t }).filter(function (v, i, a) { return a.indexOf(v) === i }).join(', ') : 'Belum ada';
+                $('fStart').textContent = S ? fmtDate(S.first) : '-';
+                var svg = el('svg', { viewBox: '0 0 200 72', preserveAspectRatio: 'none' }, sp), color = 'var(--card-muted)';
+                if (!S) { pct.className = 'pct zero'; pct.textContent = '0%'; el('line', { x1: 0, x2: 200, y1: 50, y2: 50, stroke: color, 'stroke-width': 2, 'stroke-dasharray': '5 5' }, svg); return }
+                var last = S.pts[S.pts.length - 1], g = (last.v / last.c - 1) * 100;
+                pct.className = 'pct ' + (g > .005 ? '' : (g < -.005 ? 'neg' : 'zero'));
+                pct.textContent = (g >= 0 ? '+' : '') + g.toFixed(2) + '% ' + (g >= 0 ? '↑' : '↓');
+                color = g >= 0 ? 'var(--card-gain)' : 'var(--card-loss)';
+                var pts = S.pts.filter(function (p) { return p.v != null }).slice(-40);
+                if (pts.length < 2) { el('line', { x1: 0, x2: 200, y1: 40, y2: 40, stroke: color, 'stroke-width': 3, 'stroke-linecap': 'round' }, svg); return }
+                var vs = pts.map(function (p) { return p.v }), mn = Math.min.apply(null, vs), mx = Math.max.apply(null, vs); if (mx - mn < 1e-9) { mn -= 1; mx += 1 }
+                var xy = pts.map(function (p, i) { return [i / (pts.length - 1) * 196 + 2, 8 + (1 - (p.v - mn) / (mx - mn)) * 50] });
+                var d = 'M' + xy.map(function (q) { return q[0].toFixed(1) + ' ' + q[1].toFixed(1) }).join(' L');
+                var df = el('defs', {}, svg), gr = el('linearGradient', { id: 'sg', x1: 0, y1: 0, x2: 0, y2: 1 }, df);
+                el('stop', { offset: 0, 'stop-color': color, 'stop-opacity': .45 }, gr); el('stop', { offset: 1, 'stop-color': color, 'stop-opacity': 0 }, gr);
+                el('path', { d: d + ' L198 72 L2 72Z', fill: 'url(#sg)' }, svg);
+                el('path', { d: d, fill: 'none', stroke: color, 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'vector-effect': 'non-scaling-stroke' }, svg);
+            }
+
+            /* table */
+            function drawRows() {
+                var tb = $('rows'); tb.innerHTML = '';
+                if (!hold.length) { var tr = document.createElement('tr'), td = document.createElement('td'); td.colSpan = 6; td.className = 'emptyrow'; td.textContent = 'Belum ada koin. Tambahkan lewat tombol + pada folder.'; tr.appendChild(td); tb.appendChild(tr); return }
+                hold.forEach(function (h) {
+                    var v = valueAt(h, TODAY), g = (v / h.m - 1) * 100, tr = document.createElement('tr'); if (h.id === sel) tr.className = 'sel';
+                    tr.innerHTML = '<td><span class="tk"></span></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"><button type="button" class="xbtn">Hapus</button></td>';
+                    var c = tr.children; c[0].firstChild.textContent = h.t; c[1].textContent = fmtDate(h.s); c[2].textContent = usd.format(h.m); c[3].textContent = usd.format(v);
+                    c[4].textContent = (g >= 0 ? '+' : '') + g.toFixed(2) + '%'; c[4].className = 'n ' + (g >= 0 ? 'pos' : 'neg');
+                    c[5].firstChild.setAttribute('aria-label', 'Hapus ' + h.t);
+                    c[5].firstChild.addEventListener('click', function () { hold = hold.filter(function (x) { return x.id !== h.id }); if (sel === h.id) sel = null; save(); render() });
+                    tb.appendChild(tr);
+                });
+            }
+
+            /* folder */
+            var gf = $('gf'), files = $('gfFiles'), hit = $('gfHit'), front = $('gfFront'), isOpen = false;
+            function setOpen(o) {
+                isOpen = o; if (o) gf.setAttribute('data-open', ''); else gf.removeAttribute('data-open'); hit.setAttribute('aria-expanded', o);
+                if (o) files.removeAttribute('inert'); else files.setAttribute('inert', '')
+            }
+            setOpen(false);
+            hit.addEventListener('click', function () { setOpen(!isOpen) });
+            document.addEventListener('pointerdown', function (e) { if (isOpen && !gf.contains(e.target)) setOpen(false) });
+            var px = 0, py = 0, raf = 0;
+            function wr() { raf = 0; gf.style.setProperty('--gf-px', px.toFixed(3)); gf.style.setProperty('--gf-py', py.toFixed(3)) }
+            gf.addEventListener('pointermove', function (e) { if (e.pointerType === 'touch') return; var r = gf.getBoundingClientRect(); px = (e.clientX - r.left) / r.width * 2 - 1; py = (e.clientY - r.top) / r.height * 2 - 1; if (!raf) raf = requestAnimationFrame(wr) });
+            gf.addEventListener('pointerleave', function () { px = 0; py = 0; if (!raf) raf = requestAnimationFrame(wr) });
+            function fit() { var w = Math.min($('folderBox').clientWidth, 380); gf.style.setProperty('--k', (w / 340).toFixed(4)) }
+            function art(t) {
+                var h = hash(t), a = h % 360, b = (a + 50 + (h >> 8) % 60) % 360;
+                return 'radial-gradient(70% 80% at 20% 15%,hsl(' + a + ' 80% 62%),transparent 65%),radial-gradient(70% 80% at 90% 90%,hsl(' + b + ' 75% 45%),transparent 62%),linear-gradient(135deg,hsl(' + a + ' 55% 22%),hsl(' + b + ' 60% 12%))'
+            }
+            function drawFiles() {
+                files.innerHTML = '';
+                var vis = hold.slice(-4);
+                vis.forEach(function (h, v) {
+                    var r = rng(hash(h.t) + h.id), slot = vis.length <= 1 ? 0 : (v / (vis.length - 1)) * 2 - 1;
+                    var b = document.createElement('button'); b.type = 'button'; b.className = 'gf-sheet'; b.setAttribute('aria-pressed', sel === h.id);
+                    b.style.cssText = '--slot:' + slot + ';--depth:' + (vis.length - 1 - v) + ';--jx:' + ((r() - .5) * 10).toFixed(2) + 'px;--jr:' + ((r() - .5) * 3.2).toFixed(2) + 'deg;z-index:' + (v + 1);
+                    b.innerHTML = '<span class="gf-sheet-art"></span><span class="gf-sheet-head"><span class="gf-sheet-name"></span><span class="gf-sheet-meta"></span></span><span class="gf-sheet-big"></span>';
+                    b.firstChild.style.background = art(h.t);
+                    b.querySelector('.gf-sheet-name').textContent = h.t; b.querySelector('.gf-sheet-meta').textContent = fmtDate(h.s); b.querySelector('.gf-sheet-big').textContent = usd0.format(h.m);
+                    b.addEventListener('click', function () { sel = sel === h.id ? null : h.id; render() });
+                    var w = document.createElement('div'); w.setAttribute('role', 'listitem'); w.style.display = 'contents'; w.appendChild(b); files.appendChild(w);
+                });
+                var c = hold.length; $('gfMeta').textContent = c + ' koin';
+                hit.setAttribute('aria-label', (isOpen ? 'Tutup' : 'Buka') + ' folder portofolio, ' + c + ' koin');
+            }
+
+            function render() { drawSummary(); drawChart(); drawRows(); drawFiles() }
+
+            /* dropdown */
+            var ddBtn = $('ddBtn'), ddMenu = $('ddMenu');
+            function setDd(o) { ddBtn.setAttribute('aria-expanded', o ? 'true' : 'false'); ddMenu.hidden = !o }
+            ddBtn.addEventListener('click', function (e) { e.stopPropagation(); setDd(ddMenu.hidden) });
+            document.addEventListener('click', function (e) { if (!ddMenu.contains(e.target)) setDd(false) });
+
+            /* dialog + 3D calendar */
+            var ov = $('ov'), form = $('form'), fName = $('fName'), fMod = $('fMod'), fDate = $('fDate'), err = $('err'), cal3d = $('cal3d');
+            var vy, vm, pick = null;
+            function setPick(n) { pick = n; fDate.value = n ? fmtDate(n) : ''; $('pickTxt').textContent = n ? fmtDate(n) : '-'; drawCal(); drawPreview() }
+            function drawCal() {
+                $('calMonth').textContent = MON[vm] + ' ' + vy;
+                var g = $('calGrid'); g.innerHTML = '';
+                DN.forEach(function (d) { var s = document.createElement('span'); s.className = 'dn'; s.textContent = d; g.appendChild(s) });
+                var first = dnum(vy, vm, 1), off = (new Date(first * DAY).getUTCDay() + 6) % 7, dim = new Date(Date.UTC(vy, vm + 1, 0)).getUTCDate();
+                for (var i = 0; i < off; i++)g.appendChild(document.createElement('span'));
+                for (var d = 1; d <= dim; d++) {
+                    (function (d) {
+                        var n = dnum(vy, vm, d), b = document.createElement('button'); b.type = 'button'; b.textContent = d;
+                        b.disabled = n > TODAY || n < EPOCH; b.setAttribute('aria-pressed', pick === n); if (n === TODAY) b.className = 'today';
+                        b.setAttribute('aria-label', d + ' ' + MON[vm] + ' ' + vy);
+                        b.addEventListener('click', function () { setPick(n); popUp() }); g.appendChild(b);
+                    })(d)
+                }
+                var maxM = parts(TODAY); $('next').disabled = (vy === maxM.y && vm === maxM.m);
+            }
+            function drawPreview() {
+                var c = $('calChart'); c.innerHTML = '';
+                var t = fName.value.trim().toUpperCase();
+                if (!t || !pick) return;
+                var p = prices(t), s = pick, len = TODAY - s + 1, pts = [];
+                for (var d = s; d <= TODAY; d++)pts.push(p[d - EPOCH] / p[s - EPOCH]);
+                var lab = document.createElement('span'); lab.className = 'cl'; lab.textContent = t + ' · simulasi'; c.appendChild(lab);
+                var svg = el('svg', { viewBox: '0 0 200 58', preserveAspectRatio: 'none' }, c);
+                if (pts.length < 2) { el('line', { x1: 4, x2: 196, y1: 36, y2: 36, stroke: 'var(--accent)', 'stroke-width': 2 }, svg); return }
+                var mn = Math.min.apply(null, pts), mx = Math.max.apply(null, pts); if (mx - mn < 1e-9) { mn -= .01; mx += .01 }
+                var d2 = 'M' + pts.map(function (v, i) { return (4 + i / (pts.length - 1) * 192).toFixed(1) + ' ' + (18 + (1 - (v - mn) / (mx - mn)) * 34).toFixed(1) }).join(' L');
+                el('path', { d: d2, fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'vector-effect': 'non-scaling-stroke' }, svg);
+            }
+            function popUp() { cal3d.classList.add('pop') }
+            function popDown() { if (!fMod.value && document.activeElement !== fMod) cal3d.classList.remove('pop') }
+            fMod.addEventListener('focus', popUp); fMod.addEventListener('input', popUp); fMod.addEventListener('blur', function () { setTimeout(popDown, 120) });
+            fName.addEventListener('input', drawPreview);
+            $('prev').addEventListener('click', function () { vm--; if (vm < 0) { vm = 11; vy-- } drawCal() });
+            $('next').addEventListener('click', function () { vm++; if (vm > 11) { vm = 0; vy++ } drawCal() });
+            var lastFocus = null;
+            function openDlg() {
+                lastFocus = document.activeElement; form.reset(); err.textContent = ''; cal3d.classList.remove('pop');
+                var p = parts(TODAY); vy = p.y; vm = p.m; setPick(TODAY);
+                ov.hidden = false; setTimeout(function () { fName.focus() }, 30);
+            }
+            function closeDlg() { ov.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus() }
+            $('gfAdd').addEventListener('click', function () { openDlg() });
+            $('cancel').addEventListener('click', closeDlg);
+            ov.addEventListener('pointerdown', function (e) { if (e.target === ov) closeDlg() });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (!ov.hidden) closeDlg(); else if (isOpen) { setOpen(false); hit.focus() } setDd(false) } });
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var t = fName.value.trim().toUpperCase(), m = parseFloat(fMod.value);
+                if (!/^[A-Z.\-]{1,10}$/.test(t)) { err.textContent = 'Isi nama koin dengan huruf, misalnya BTC.'; fName.focus(); return }
+                if (!(m > 0)) { err.textContent = 'Isi modal dengan angka lebih dari 0.'; fMod.focus(); return }
+                if (!pick) { err.textContent = 'Pilih tanggal mulai pada kalender.'; return }
+                hold.push({ id: ++uid, t: t, m: m, s: pick }); save(); sel = null; closeDlg(); render();
+                front.classList.remove('bump'); void front.offsetWidth; front.classList.add('bump'); setOpen(true);
+            });
+
+            var tm; window.addEventListener('resize', function () { clearTimeout(tm); tm = setTimeout(function () { fit(); drawChart() }, 80) });
+            fit(); render();
+        })();
+    </script>
+</body>
+
+</html>
