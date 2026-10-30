@@ -102,6 +102,10 @@
             margin: 0 auto
         }
 
+        main.wrap {
+            overflow-x: clip
+        }
+
         a {
             color: inherit
         }
@@ -296,9 +300,10 @@
 
         .sum-main {
             display: flex;
+            flex-wrap: wrap;
             align-items: flex-end;
             justify-content: space-between;
-            gap: 18px
+            gap: 14px 18px
         }
 
         .sum .lab {
@@ -324,16 +329,16 @@
         }
 
         .sum .big {
-            font: 700 clamp(34px, 5vw, 46px)/1.1 var(--fd);
+            font: 700 clamp(30px, 4.6vw, 44px)/1.1 var(--fd);
             letter-spacing: -.02em;
             margin-top: 6px;
             font-variant-numeric: tabular-nums;
-            overflow-wrap: anywhere
+            white-space: nowrap
         }
 
         .spark {
-            flex: none;
-            width: clamp(120px, 34%, 200px);
+            flex: 1 1 120px;
+            max-width: 200px;
             height: 72px
         }
 
@@ -909,7 +914,7 @@
         table {
             border-collapse: collapse;
             width: 100%;
-            min-width: 520px;
+            min-width: 700px;
             font-size: 14px
         }
 
@@ -979,13 +984,13 @@
             background: rgba(6, 10, 16, .55);
             -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
-            display: grid;
-            place-items: center;
+            display: flex;
             padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
             overflow-y: auto
         }
 
         .dlg {
+            margin: auto;
             width: 100%;
             max-width: 860px;
             background: var(--surface);
@@ -1093,6 +1098,147 @@
 
         .btn:hover {
             filter: brightness(1.06)
+        }
+
+        .keybox {
+            margin-top: 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface);
+            padding: 0
+        }
+
+        .keybox summary {
+            cursor: pointer;
+            padding: 12px 16px;
+            font: 500 14px var(--fb);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .keybox summary::-webkit-details-marker {
+            display: none
+        }
+
+        .keybox summary::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--muted);
+            flex: none
+        }
+
+        .keybox.on summary::before {
+            background: var(--gain)
+        }
+
+        .keybox .kbody {
+            padding: 0 16px 16px;
+            display: grid;
+            gap: 10px;
+            max-width: 640px
+        }
+
+        .keybox .kbody p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--muted)
+        }
+
+        .keybox form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .keybox input {
+            flex: 1 1 220px;
+            min-width: 0;
+            font: 500 14px var(--fm);
+            color: var(--ink);
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px
+        }
+
+        .keybox .btn {
+            padding: 10px 16px
+        }
+
+        .badge.live {
+            color: var(--gain);
+            border: 1px solid var(--gain)
+        }
+
+        .badge.live::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--gain);
+            margin-right: 6px;
+            vertical-align: 1px
+        }
+
+        /* edit */
+        .cur {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin: 0 0 16px
+        }
+
+        .cur span {
+            display: block;
+            font: 500 10px var(--fm);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted)
+        }
+
+        .cur b {
+            font: 500 14px var(--fm);
+            overflow-wrap: anywhere
+        }
+
+        .opt {
+            font-weight: 400;
+            color: var(--muted)
+        }
+
+        .btn.dng {
+            color: var(--loss);
+            border-color: var(--loss);
+            margin-left: auto
+        }
+
+        .avg2 {
+            display: block;
+            font: 400 11px var(--fm);
+            color: var(--muted)
+        }
+
+        .ebtn {
+            font: 500 13px var(--fb);
+            color: var(--accent);
+            background: none;
+            border: 1px solid var(--accent);
+            border-radius: 7px;
+            padding: 5px 12px;
+            cursor: pointer
+        }
+
+        .ebtn:hover {
+            background: color-mix(in srgb, var(--accent) 12%, transparent)
         }
 
         /* 3D calendar */
@@ -1422,8 +1568,22 @@
         <section class="head">
             <p class="crumb">Investasi / Saham RI</p>
             <h1>Portofolio Saham RI</h1>
-            <p class="lead">Catat modal, saham BEI, dan tanggal mulai. Grafik dihitung dari simulasi, bukan harga pasar
-                sebenarnya.</p>
+            <p class="lead">Catat modal, saham BEI, dan tanggal mulai. Grafik memakai harga asli dari iTick jika API
+                token sudah dipasang, jika tidak memakai simulasi.</p>
+
+            <details class="keybox" id="keyBox">
+                <summary id="tdState">Aktifkan harga asli (butuh API key gratis)</summary>
+                <div class="kbody">
+                    <p>Daftar gratis di <a href="https://itick.org" target="_blank" rel="noopener"
+                            style="color:var(--accent)">itick.org</a>, salin API token dari dashboard, lalu tempel di
+                        bawah. Token hanya tersimpan di browser ini.</p>
+                    <form id="keyForm" autocomplete="off"><input id="tdKey" type="password"
+                            placeholder="API token iTick" aria-label="API token iTick"><button class="btn pri"
+                            type="submit">Simpan</button><button class="btn" type="button" id="tdClear">Hapus</button>
+                    </form>
+                    <p id="tdStatus"></p>
+                </div>
+            </details>
         </section>
 
         <section class="top">
@@ -1449,11 +1609,13 @@
 
             <div class="panel">
                 <div class="p-head">
-                    <h2 id="cTitle">Nilai portofolio</h2><span class="badge">Simulasi</span>
+                    <h2 id="cTitle">Nilai portofolio</h2><span style="display:flex;gap:8px;align-items:center"><button
+                            type="button" class="xbtn" id="allBtn" hidden>Lihat semua</button><span class="badge"
+                            id="srcBadge">Simulasi</span></span>
                 </div>
                 <div class="read"><span class="big" id="rVal">Rp 0</span><span class="sub" id="rSub"></span></div>
                 <div class="chart" id="chartBox"></div>
-                <div class="legend"><span><i></i>Nilai simulasi</span><span><i class="c"></i>Modal disetor</span></div>
+                <div class="legend"><span><i></i>Nilai</span><span><i class="c"></i>Modal disetor</span></div>
             </div>
         </section>
 
@@ -1507,7 +1669,8 @@
                     <ol>
                         <li>Klik tombol <b>+</b> pada folder.</li>
                         <li>Isi nama saham, modal, dan tanggal mulai di kalender.</li>
-                        <li>Klik folder untuk membukanya, lalu pilih saham untuk melihat grafiknya sendiri.</li>
+                        <li>Klik folder untuk membukanya, lalu klik kartu saham untuk mengedit, menambah modal, atau
+                            mengubah harga rata-rata.</li>
                     </ol>
                 </div>
             </div>
@@ -1523,7 +1686,8 @@
                                 <th>Saham</th>
                                 <th>Mulai</th>
                                 <th class="n">Modal</th>
-                                <th class="n">Nilai simulasi</th>
+                                <th class="n">Rata-rata</th>
+                                <th class="n">Nilai</th>
                                 <th class="n">Hasil</th>
                                 <th></th>
                             </tr>
@@ -1572,7 +1736,7 @@
             </div>
             <div class="f-bot">
                 <p>&copy; 2026 Invclay</p>
-                <p>Grafik di halaman ini adalah simulasi dan bukan nasihat keuangan.</p>
+                <p>Harga asli dari iTick bila API token dipasang, jika tidak simulasi. Bukan nasihat keuangan.</p>
             </div>
         </div>
     </footer>
@@ -1582,8 +1746,9 @@
         <form class="dlg" id="form" role="dialog" aria-modal="true" aria-labelledby="dTitle" novalidate>
             <div>
                 <h3 id="dTitle">Tambah saham</h3>
-                <p class="sub">Semua angka dalam rupiah.</p>
-                <div class="fld"><label for="fName">Nama saham</label><input id="fName" list="tickers"
+                <p class="sub" id="dSub">Semua angka dalam rupiah.</p>
+                <div class="cur" id="cur" hidden></div>
+                <div class="fld" id="nameFld"><label for="fName">Kode saham</label><input id="fName" list="tickers"
                         placeholder="BBCA" autocomplete="off" maxlength="12" style="text-transform:uppercase">
                     <datalist id="tickers">
                         <option value="BBCA">
@@ -1596,19 +1761,34 @@
                         <option value="ANTM">
                         <option value="GOTO">
                         <option value="ICBP">
+                        <option value="INDF">
+                        <option value="KLBF">
+                        <option value="UNTR">
+                        <option value="ADRO">
+                        <option value="MDKA">
+                        <option value="PGAS">
+                        <option value="CPIN">
+                        <option value="BRIS">
                     </datalist>
                 </div>
-                <div class="fld"><label for="fMod">Modal</label><input id="fMod" type="number" inputmode="decimal"
-                        min="1" step="any" placeholder="1000000">
-                    <div class="hint">Kalender di samping akan menonjol saat kamu mengisi modal (dalam rupiah).</div>
+                <div class="fld"><label for="fMod" id="modLab">Modal</label><input id="fMod" type="number"
+                        inputmode="decimal" min="1" step="any" placeholder="1000000">
+                    <div class="hint" id="modHint">Kalender di samping akan menonjol saat kamu mengisi modal (dalam
+                        rupiah).</div>
                 </div>
-                <div class="fld"><label for="fDate">Tanggal mulai</label><input id="fDate" type="text" readonly
-                        aria-describedby="dHint">
+                <div class="fld"><label for="fDate" id="dateLab">Tanggal mulai</label><input id="fDate" type="text"
+                        readonly aria-describedby="dHint">
                     <div class="hint" id="dHint">Pilih tanggal pada kalender.</div>
+                </div>
+                <div class="fld"><label for="fAvg">Harga rata-rata per unit <span
+                            class="opt">(opsional)</span></label><input id="fAvg" type="number" inputmode="decimal"
+                        min="0" step="any">
+                    <div class="hint">Dicatat untuk perhitungan unit. Tidak mengubah grafik simulasi.</div>
                 </div>
                 <p class="err" id="err" role="alert"></p>
                 <div class="btns"><button class="btn pri" type="submit">Simpan</button><button class="btn" type="button"
-                        id="cancel">Batal</button></div>
+                        id="cancel">Batal</button><button class="btn dng" type="button" id="del" hidden>Hapus</button>
+                </div>
             </div>
             <div class="stage3d" aria-label="Kalender tanggal mulai">
                 <div class="cal3d" id="cal3d">
@@ -1660,18 +1840,97 @@
             function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++)h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0 }
             function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
             var EPOCH = dnum(2020, 0, 1), cache = {};
+            var real = {}, tried = {}, src = {}, TDKEY = '', lastErr = '', authFailed = false, DM = 86400000, HOSTS = ['https://api-free.itick.org', 'https://api.itick.org'], hostI = 0;
+            try { TDKEY = localStorage.getItem('invclay-it-key') || '' } catch (e) { }
+            var chain = Promise.resolve(), gapAt = 0;
+            function enqueue(fn) {
+                var p = chain.then(function () { return new Promise(function (r) { setTimeout(r, Math.max(0, gapAt - Date.now())) }) }).then(function () { gapAt = Date.now() + 13000; return fn() });
+                chain = p.catch(function () { }); return p;
+            }
+            /* iTick daily bars (kType 8) for IDX; returns {rows:[[day,close]], minT} */
+            function itBars(t, limit, et, hi) {
+                hi = hi === undefined ? hostI : hi;
+                var u = HOSTS[hi] + '/stock/kline?region=ID&code=' + encodeURIComponent(t) + '&kType=8&limit=' + limit + (et ? '&et=' + et : '');
+                return fetch(u, { headers: { accept: 'application/json', token: TDKEY } }).then(function (r) {
+                    if (r.status === 401 && hi + 1 < HOSTS.length) return { retry: true };
+                    if (!r.ok) {
+                        return r.text().then(function (x) {
+                            var m = ''; try { var j = JSON.parse(x); m = j.msg || j.message || '' } catch (e) { }
+                            var er = new Error(r.status === 401 ? 'token ditolak iTick (401' + (m ? ', ' + m : '') + '). Salin ulang token secara utuh tanpa spasi, pastikan belum kedaluwarsa, atau buat token baru di dashboard iTick.' : (r.status === 429 ? 'terlalu banyak permintaan (429), coba lagi beberapa menit lagi.' : (m || ('HTTP ' + r.status))));
+                            er.http = r.status; throw er
+                        })
+                    }
+                    return r.json();
+                }).then(function (d) {
+                    if (d && d.retry === true) return itBars(t, limit, et, hi + 1).then(function (x) { hostI = hi + 1; return x });
+                    if (d && d.code !== undefined && d.code !== 0) throw new Error(d.msg || d.message || ('kode ' + d.code));
+                    var arr = Array.isArray(d.data) ? d.data : ((d.data && d.data.list) || []);
+                    if (!arr.length) throw new Error('tidak ada data untuk kode ini');
+                    var minT = Infinity, rows = [];
+                    arr.forEach(function (b) { var tt = +b.t, c = parseFloat(b.c); if (tt > 0 && c > 0) { rows.push([Math.floor((tt + 25200000) / DM), c]); if (tt < minT) minT = tt } });
+                    if (!rows.length) throw new Error('format data tidak dikenali');
+                    return { rows: rows, minT: minT, n: arr.length };
+                });
+            }
+            function applyRows(t, rows) {
+                var n = TODAY - EPOCH + 1, arr = new Array(n), got = 0, j;
+                rows.forEach(function (r) { var i = r[0] - EPOCH; if (i >= 0 && i < n && r[1] > 0) { arr[i] = r[1]; got++ } });
+                if (!got) return false;
+                var first = 0; for (j = 0; j < n; j++)if (arr[j] > 0) { first = arr[j]; break }
+                var last = first; for (j = 0; j < n; j++) { if (arr[j] > 0) last = arr[j]; else arr[j] = last }
+                real[t] = arr; src[t] = 'iTick'; return true;
+            }
+            function loadReal(t) {
+                if (!TDKEY || authFailed || !/^[A-Z0-9]{2,10}$/.test(t)) return Promise.resolve();
+                if (tried[t]) return tried[t];
+                try { var c = JSON.parse(localStorage.getItem('invclay-pxid-' + t) || 'null'); if (c && c.d === TODAY && applyRows(t, c.r)) return tried[t] = Promise.resolve() } catch (e) { }
+                return tried[t] = enqueue(function () { return itBars(t, 1000) }).then(function (p1) {
+                    var rows = p1.rows;
+                    if (p1.n >= 1000 && Math.floor((p1.minT + 25200000) / DM) > EPOCH) {
+                        return enqueue(function () { return itBars(t, 1000, p1.minT - 1) }).then(function (p2) { rows = rows.concat(p2.rows); return rows }).catch(function () { return rows });
+                    }
+                    return rows;
+                }).then(function (rows) {
+                    if (applyRows(t, rows)) { try { localStorage.setItem('invclay-pxid-' + t, JSON.stringify({ d: TODAY, r: rows })) } catch (e) { } }
+                }).catch(function (e) { if (e.http === 401) authFailed = true; lastErr = t + ': ' + e.message; status() });
+            }
+            function idxOpen() { var d = new Date(), w = d.getUTCDay(), m = d.getUTCHours() * 60 + d.getUTCMinutes(); return w >= 1 && w <= 5 && m >= 120 && m <= 540 }
+            function refreshReal() {
+                if (!TDKEY || !idxOpen() || document.visibilityState !== 'visible') return;
+                Object.keys(real).forEach(function (t) {
+                    enqueue(function () { return itBars(t, 2) }).then(function (p) {
+                        var a = real[t], n = a.length, last = 0;
+                        p.rows.forEach(function (r) { var i = r[0] - EPOCH; if (i >= 0 && i < n && r[1] > 0) a[i] = r[1] });
+                        for (var i = 0; i < n; i++) { if (a[i] > 0) last = a[i]; else a[i] = last }
+                        if (ov.hidden) render();
+                    }).catch(function () { });
+                });
+            }
+            function ensureReal(list) {
+                return Promise.all(list.map(function (t) { return loadReal(t) })).then(function () { render() });
+            }
+            function status() {
+                var box = $('keyBox'), n = Object.keys(real).length;
+                box.classList.toggle('on', !!TDKEY);
+                $('tdState').textContent = !TDKEY ? 'Aktifkan harga asli (butuh API token gratis)' : (n ? 'Harga asli aktif untuk ' + n + ' kode' : 'API token tersimpan');
+                $('tdStatus').textContent = !TDKEY ? 'Tanpa API token, grafik memakai simulasi.' : (lastErr ? 'Gagal memuat ' + lastErr : (n ? 'Harga diperbarui tiap 10 menit saat bursa buka.' : 'Menunggu data dari iTick. Paket gratis dibatasi 5 permintaan per menit, jadi tiap kode butuh sekitar 25 detik.'));
+            }
             function prices(t) {
+                if (real[t]) return real[t];
                 if (cache[t]) return cache[t];
                 var r = rng(hash(t)), n = TODAY - EPOCH + 1, p = [100], drift = .0003 + r() * .0007, vol = .012 + r() * .014;
                 for (var i = 1; i < n; i++) { var g = Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r()); p.push(p[i - 1] * Math.exp(drift + vol * g)) }
                 return cache[t] = p;
             }
-            function valueAt(h, day) { var p = prices(h.t); return h.m * p[day - EPOCH] / p[h.s - EPOCH] }
+            function valueAt(h, day) { var p = prices(h.t), v = 0; h.lots.forEach(function (l) { if (l.d <= day) v += l.amt * p[day - EPOCH] / p[l.d - EPOCH] }); return v }
+            function costAt(h, day) { var c = 0; h.lots.forEach(function (l) { if (l.d <= day) c += l.amt }); return c }
+            function norm(h) { h.m = 0; h.s = Infinity; h.lots.forEach(function (l) { h.m += l.amt; if (l.d < h.s) h.s = l.d }) }
 
             /* state */
             var hold = [], sel = null, KEY = 'invclay-saham-ri';
-            try { var raw = localStorage.getItem(KEY); if (raw) { hold = JSON.parse(raw).filter(function (h) { return h && h.t && h.m > 0 && h.s }) } } catch (e) { }
+            try { var raw = localStorage.getItem(KEY); if (raw) { hold = JSON.parse(raw).filter(function (h) { return h && h.t && ((h.lots && h.lots.length) || (h.m > 0 && h.s)) }) } } catch (e) { }
             function save() { try { localStorage.setItem(KEY, JSON.stringify(hold)) } catch (e) { } }
+            hold.forEach(function (h) { if (!h.lots) h.lots = [{ d: h.s, amt: h.m }]; if (h.avg === undefined) h.avg = null; norm(h) });
             var uid = Date.now();
 
             /* series for chart */
@@ -1681,7 +1940,7 @@
                 var from = Math.min(first, TODAY - 13), pts = [];
                 for (var d = from; d <= TODAY; d++) {
                     if (d < first) { pts.push({ d: d, v: null, c: null }); continue }
-                    var v = 0, c = 0; list.forEach(function (h) { if (h.s <= d) { v += valueAt(h, d); c += h.m } });
+                    var v = 0, c = 0; list.forEach(function (h) { if (h.s <= d) { v += valueAt(h, d); c += costAt(h, d) } });
                     pts.push({ d: d, v: v, c: c });
                 }
                 return { from: from, first: first, pts: pts };
@@ -1695,8 +1954,8 @@
             function drawChart() {
                 var list = active(), S = series(list), W = Math.max(box.clientWidth, 240), H = W < 500 ? 210 : 280, L = 58, R = 10, T = 10, B = 24, iw = W - L - R, ih = H - T - B;
                 box.innerHTML = '';
-                var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Grafik simulasi nilai portofolio' }, box);
-                $('cTitle').textContent = sel && list[0] ? list[0].t : 'Nilai portofolio';
+                var svg = el('svg', { width: W, height: H, viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Grafik nilai portofolio' }, box);
+                $('cTitle').textContent = sel && list[0] ? list[0].t : 'Nilai portofolio'; $('allBtn').hidden = !(sel && list[0]);
                 if (!S) {
                     for (var t = 0; t <= 3; t++) { var y = T + ih * t / 3; el('line', { x1: L, x2: W - R, y1: y, y2: y, class: 'grid' }, svg); var lb = el('text', { x: L - 8, y: y + 4, 'text-anchor': 'end', class: 'ax' }, svg); lb.textContent = compact(1000000 * (3 - t) / 3) }
                     el('line', { x1: L, x2: W - R, y1: T + ih * .62, y2: T + ih * .62, stroke: 'var(--muted)', 'stroke-width': 1.5, 'stroke-dasharray': '6 6' }, svg);
@@ -1756,14 +2015,16 @@
             /* table */
             function drawRows() {
                 var tb = $('rows'); tb.innerHTML = '';
-                if (!hold.length) { var tr = document.createElement('tr'), td = document.createElement('td'); td.colSpan = 6; td.className = 'emptyrow'; td.textContent = 'Belum ada saham. Tambahkan lewat tombol + pada folder.'; tr.appendChild(td); tb.appendChild(tr); return }
+                if (!hold.length) { var tr0 = document.createElement('tr'), td0 = document.createElement('td'); td0.colSpan = 7; td0.className = 'emptyrow'; td0.textContent = 'Belum ada saham. Tambahkan lewat tombol + pada folder.'; tr0.appendChild(td0); tb.appendChild(tr0); return }
                 hold.forEach(function (h) {
                     var v = valueAt(h, TODAY), g = (v / h.m - 1) * 100, tr = document.createElement('tr'); if (h.id === sel) tr.className = 'sel';
-                    tr.innerHTML = '<td><span class="tk"></span></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"><button type="button" class="xbtn">Hapus</button></td>';
-                    var c = tr.children; c[0].firstChild.textContent = h.t; c[1].textContent = fmtDate(h.s); c[2].textContent = usd.format(h.m); c[3].textContent = usd.format(v);
-                    c[4].textContent = (g >= 0 ? '+' : '') + g.toFixed(2) + '%'; c[4].className = 'n ' + (g >= 0 ? 'pos' : 'neg');
-                    c[5].firstChild.setAttribute('aria-label', 'Hapus ' + h.t);
-                    c[5].firstChild.addEventListener('click', function () { hold = hold.filter(function (x) { return x.id !== h.id }); if (sel === h.id) sel = null; save(); render() });
+                    tr.innerHTML = '<td><span class="tk"></span></td><td></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"></td><td class="n"><button type="button" class="ebtn">Edit</button></td>';
+                    var c = tr.children; c[0].firstChild.textContent = h.t; c[1].textContent = fmtDate(h.s); c[2].textContent = usd.format(h.m);
+                    if (h.avg > 0) { c[3].textContent = usd.format(h.avg); var u = document.createElement('span'); u.className = 'avg2'; u.textContent = (+(h.m / h.avg).toFixed(4)) + ' unit'; c[3].appendChild(u) } else c[3].textContent = '-';
+                    c[4].textContent = usd.format(v);
+                    c[5].textContent = (g >= 0 ? '+' : '') + g.toFixed(2) + '%'; c[5].className = 'n ' + (g >= 0 ? 'pos' : 'neg');
+                    c[6].firstChild.setAttribute('aria-label', 'Edit ' + h.t);
+                    c[6].firstChild.addEventListener('click', function () { sel = h.id; render(); openDlg(h.id) });
                     tb.appendChild(tr);
                 });
             }
@@ -1796,14 +2057,21 @@
                     b.innerHTML = '<span class="gf-sheet-art"></span><span class="gf-sheet-head"><span class="gf-sheet-name"></span><span class="gf-sheet-meta"></span></span><span class="gf-sheet-big"></span>';
                     b.firstChild.style.background = art(h.t);
                     b.querySelector('.gf-sheet-name').textContent = h.t; b.querySelector('.gf-sheet-meta').textContent = fmtDate(h.s); b.querySelector('.gf-sheet-big').textContent = usd0.format(h.m);
-                    b.addEventListener('click', function () { sel = sel === h.id ? null : h.id; render() });
+                    b.addEventListener('click', function () { sel = h.id; render(); openDlg(h.id) });
                     var w = document.createElement('div'); w.setAttribute('role', 'listitem'); w.style.display = 'contents'; w.appendChild(b); files.appendChild(w);
                 });
                 var c = hold.length; $('gfMeta').textContent = c + ' saham';
                 hit.setAttribute('aria-label', (isOpen ? 'Tutup' : 'Buka') + ' folder portofolio, ' + c + ' saham');
             }
 
-            function render() { drawSummary(); drawChart(); drawRows(); drawFiles() }
+            function badge() {
+                var b = $('srcBadge'), list = active();
+                var rl = list.filter(function (h) { return real[h.t] });
+                if (!list.length || !rl.length) { b.className = 'badge'; b.textContent = 'Simulasi' }
+                else { b.className = 'badge live'; b.textContent = rl.length === list.length ? 'Harga asli \u00B7 iTick' : 'Sebagian asli \u00B7 iTick' }
+                status();
+            }
+            function render() { drawSummary(); drawChart(); drawRows(); drawFiles(); badge() }
 
             /* dropdown */
             var ddBtn = $('ddBtn'), ddMenu = $('ddMenu');
@@ -1837,7 +2105,7 @@
                 if (!t || !pick) return;
                 var p = prices(t), s = pick, len = TODAY - s + 1, pts = [];
                 for (var d = s; d <= TODAY; d++)pts.push(p[d - EPOCH] / p[s - EPOCH]);
-                var lab = document.createElement('span'); lab.className = 'cl'; lab.textContent = t + ' · simulasi'; c.appendChild(lab);
+                var lab = document.createElement('span'); lab.className = 'cl'; lab.textContent = t + ' · ' + (real[t] ? 'harga asli' : 'simulasi'); c.appendChild(lab);
                 var svg = el('svg', { viewBox: '0 0 200 58', preserveAspectRatio: 'none' }, c);
                 if (pts.length < 2) { el('line', { x1: 4, x2: 196, y1: 36, y2: 36, stroke: 'var(--accent)', 'stroke-width': 2 }, svg); return }
                 var mn = Math.min.apply(null, pts), mx = Math.max.apply(null, pts); if (mx - mn < 1e-9) { mn -= .01; mx += .01 }
@@ -1850,29 +2118,75 @@
             fName.addEventListener('input', drawPreview);
             $('prev').addEventListener('click', function () { vm--; if (vm < 0) { vm = 11; vy-- } drawCal() });
             $('next').addEventListener('click', function () { vm++; if (vm > 11) { vm = 0; vy++ } drawCal() });
-            var lastFocus = null;
-            function openDlg() {
+            var lastFocus = null, mode = 'add', editId = null, delArmed = false, delBtn = $('del'), fAvg = $('fAvg'), modHintAdd = '';
+            var CFG = { noun: 'saham', tick: 'BBCA', mod: '1000000', avg: '9000' };
+            function find(id) { for (var i = 0; i < hold.length; i++)if (hold[i].id === id) return hold[i]; return null }
+            function curBox(h) {
+                var c = $('cur'); c.innerHTML = '';
+                var u = h.avg > 0 ? +(h.m / h.avg).toFixed(4) : null;
+                [['Modal', usd.format(h.m)], ['Rata-rata', h.avg > 0 ? usd.format(h.avg) : '-'], ['Unit', u !== null ? String(u) : '-'], ['Mulai', fmtDate(h.s)]].forEach(function (x) {
+                    var d = document.createElement('div'), a = document.createElement('span'), b = document.createElement('b');
+                    a.textContent = x[0]; b.textContent = x[1]; d.appendChild(a); d.appendChild(b); c.appendChild(d)
+                });
+            }
+            function openDlg(id) {
                 lastFocus = document.activeElement; form.reset(); err.textContent = ''; cal3d.classList.remove('pop');
+                var h = id ? find(id) : null; mode = h ? 'edit' : 'add'; editId = h ? h.id : null;
+                delArmed = false; delBtn.textContent = 'Hapus';
+                $('dTitle').textContent = h ? 'Edit ' + h.t : 'Tambah ' + CFG.noun;
+                $('nameFld').hidden = !!h; $('cur').hidden = !h; delBtn.hidden = !h;
+                $('modLab').textContent = h ? 'Tambah modal' : 'Modal';
+                $('dateLab').textContent = h ? 'Tanggal tambah modal' : 'Tanggal mulai';
+                if (!modHintAdd) modHintAdd = $('modHint').textContent;
+                $('modHint').textContent = h ? 'Kosongkan jika hanya mengubah harga rata-rata.' : modHintAdd;
+                fAvg.placeholder = CFG.avg;
+                if (h) { fName.value = h.t; fAvg.value = h.avg > 0 ? h.avg : ''; curBox(h) }
                 var p = parts(TODAY); vy = p.y; vm = p.m; setPick(TODAY);
-                ov.hidden = false; setTimeout(function () { fName.focus() }, 30);
+                ov.hidden = false; setTimeout(function () { (h ? fMod : fName).focus() }, 30);
             }
             function closeDlg() { ov.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus() }
             $('gfAdd').addEventListener('click', function () { openDlg() });
             $('cancel').addEventListener('click', closeDlg);
+            $('allBtn').addEventListener('click', function () { sel = null; render() });
             ov.addEventListener('pointerdown', function (e) { if (e.target === ov) closeDlg() });
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (!ov.hidden) closeDlg(); else if (isOpen) { setOpen(false); hit.focus() } setDd(false) } });
+            delBtn.addEventListener('click', function () {
+                if (!delArmed) { delArmed = true; delBtn.textContent = 'Klik lagi untuk menghapus'; return }
+                hold = hold.filter(function (x) { return x.id !== editId }); if (sel === editId) sel = null;
+                save(); closeDlg(); render();
+            });
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                var t = fName.value.trim().toUpperCase(), m = parseFloat(fMod.value);
-                if (!/^[A-Z.\-]{1,10}$/.test(t)) { err.textContent = 'Isi kode saham dengan huruf, misalnya BBCA.'; fName.focus(); return }
-                if (!(m > 0)) { err.textContent = 'Isi modal dengan angka lebih dari 0, misalnya 1000000.'; fMod.focus(); return }
-                if (!pick) { err.textContent = 'Pilih tanggal mulai pada kalender.'; return }
-                hold.push({ id: ++uid, t: t, m: m, s: pick }); save(); sel = null; closeDlg(); render();
-                front.classList.remove('bump'); void front.offsetWidth; front.classList.add('bump'); setOpen(true);
+                var mTxt = fMod.value.trim(), aTxt = fAvg.value.trim(), m = parseFloat(mTxt), avg = parseFloat(aTxt), h = null;
+                if (mode === 'add') {
+                    var t = fName.value.trim().toUpperCase();
+                    if (!/^[A-Z.\-]{1,10}$/.test(t)) { err.textContent = 'Isi kode ' + CFG.noun + ' dengan huruf, misalnya ' + CFG.tick + '.'; fName.focus(); return }
+                    if (!(m > 0)) { err.textContent = 'Isi modal dengan angka lebih dari 0, misalnya ' + CFG.mod + '.'; fMod.focus(); return }
+                    if (aTxt && !(avg > 0)) { err.textContent = 'Harga rata-rata harus angka lebih dari 0.'; fAvg.focus(); return }
+                    if (!pick) { err.textContent = 'Pilih tanggal mulai pada kalender.'; return }
+                    h = { id: ++uid, t: t, avg: aTxt ? avg : null, lots: [{ d: pick, amt: m }] }; norm(h); hold.push(h); sel = null;
+                } else {
+                    h = find(editId); if (!h) { closeDlg(); return }
+                    if (mTxt && !(m > 0)) { err.textContent = 'Isi tambahan modal dengan angka lebih dari 0.'; fMod.focus(); return }
+                    if (aTxt && !(avg > 0)) { err.textContent = 'Harga rata-rata harus angka lebih dari 0.'; fAvg.focus(); return }
+                    if (mTxt) { if (!pick) { err.textContent = 'Pilih tanggal pada kalender.'; return } h.lots.push({ d: pick, amt: m }) }
+                    h.avg = aTxt ? avg : null; norm(h); sel = h.id;
+                }
+                save(); closeDlg(); render(); ensureReal(hold.map(function (x) { return x.t }));
+                if (mode === 'add') { front.classList.remove('bump'); void front.offsetWidth; front.classList.add('bump'); setOpen(true) }
             });
 
             var tm; window.addEventListener('resize', function () { clearTimeout(tm); tm = setTimeout(function () { fit(); drawChart() }, 80) });
-            fit(); render();
+            $('keyForm').addEventListener('submit', function (e) {
+                e.preventDefault(); var v = $('tdKey').value.trim(); if (!v) return;
+                TDKEY = v; try { localStorage.setItem('invclay-it-key', v) } catch (x) { }
+                $('tdKey').value = ''; lastErr = ''; authFailed = false; tried = {}; real = {}; src = {}; render(); ensureReal(hold.map(function (x) { return x.t }));
+            });
+            $('tdClear').addEventListener('click', function () {
+                TDKEY = ''; try { localStorage.removeItem('invclay-it-key') } catch (x) { }
+                lastErr = ''; authFailed = false; tried = {}; real = {}; src = {}; render();
+            });
+            fit(); render(); ensureReal(hold.map(function (x) { return x.t })); setInterval(refreshReal, 600000);
         })();
     </script>
 </body>
