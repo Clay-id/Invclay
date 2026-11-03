@@ -1547,6 +1547,7 @@
                         <li><a href="saham-as.html">Saham AS<span class="k">US</span></a></li>
                         <li><a href="saham-ri.html">Saham RI<span class="k">ID</span></a></li>
                         <li><a href="crypto.html" aria-current="page">Crypto<span class="k">BTC</span></a></li>
+                        <li><a href="tabungan.html">Tabungan<span class="k">IDR</span></a></li>
                     </ul>
                 </li>
                 <li><a href="about.html">About</a></li>
@@ -1709,6 +1710,7 @@
                         <li><a href="saham-as.html">Saham AS</a></li>
                         <li><a href="saham-ri.html">Saham RI</a></li>
                         <li><a href="crypto.html">Crypto</a></li>
+                        <li><a href="tabungan.html">Tabungan</a></li>
                     </ul>
                 </nav>
                 <nav class="f-col" aria-label="Invclay">
@@ -1766,7 +1768,15 @@
                 <div class="fld"><label for="fAvg">Harga rata-rata per unit <span
                             class="opt">(opsional)</span></label><input id="fAvg" type="number" inputmode="decimal"
                         min="0" step="any">
-                    <div class="hint">Dicatat untuk perhitungan unit. Tidak mengubah grafik simulasi.</div>
+                    <div class="hint">Harga beli rata-rata per unit. Pakai titik untuk desimal, misalnya 156.719.
+                        Dicatat untuk menghitung jumlah unit.</div>
+                    <div class="hint" id="unitHint"></div>
+                </div>
+                <div class="fld" id="pxFld" hidden><label for="fPx">Harga sekarang per unit <span
+                            class="opt">(opsional)</span></label><input id="fPx" type="number" inputmode="decimal"
+                        min="0" step="any">
+                    <div class="hint">Isi dari aplikasimu (misalnya Ajaib) supaya nilai dan hasil sama. Butuh harga
+                        rata-rata. Kosongkan untuk memakai harga otomatis.</div>
                 </div>
                 <p class="err" id="err" role="alert"></p>
                 <div class="btns"><button class="btn pri" type="submit">Simpan</button><button class="btn" type="button"
@@ -1810,10 +1820,10 @@
                 fU0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
                 fUS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumSignificantDigits: 4 }),
                 fI = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }),
-                fIS = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumSignificantDigits: 4 });
+                fIS = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumSignificantDigits: 6 });
             var usd = { format: function (v) { return CUR.c === 'IDR' ? fI.format(v * CUR.rate) : fU.format(v) } };
             var usd0 = { format: function (v) { return CUR.c === 'IDR' ? fI.format(v * CUR.rate) : fU0.format(v) } };
-            function pfmt(v) { if (CUR.c === 'IDR') { var x = v * CUR.rate; return x >= 100 ? fI.format(x) : fIS.format(x) } return v >= 1 ? fU.format(v) : fUS.format(v) }
+            function pfmt(v) { if (CUR.c === 'IDR') { var x = v * CUR.rate; return x >= 1000 ? fI.format(x) : fIS.format(x) } return v >= 1 ? fU.format(v) : fUS.format(v) }
             function nu(v) { return v.toLocaleString('en-US', { maximumFractionDigits: 4 }) }
             function cID(v) { var a = Math.abs(v); if (a >= 1e9) return (v / 1e9).toFixed(1).replace('.', ',') + ' M'; if (a >= 1e6) return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace('.', ',') + ' jt'; if (a >= 1e3) return (v / 1e3).toFixed(0) + ' rb'; return v.toFixed(0) }
             function ax(v) { return CUR.c === 'IDR' ? cID(v * CUR.rate) : '$' + compact(v) }
@@ -1903,7 +1913,19 @@
                 for (var i = 1; i < n; i++) { var g = Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(2 * Math.PI * r()); p.push(p[i - 1] * Math.exp(drift + vol * g)) }
                 return cache[t] = p;
             }
-            function valueAt(h, day) { var p = prices(h.t), v = 0; h.lots.forEach(function (l) { if (l.d <= day) v += l.amt * p[day - EPOCH] / p[l.d - EPOCH] }); return v }
+            function rawAt(h, day) { var p = prices(h.t), v = 0; h.lots.forEach(function (l) { if (l.d <= day) v += l.amt * p[day - EPOCH] / p[l.d - EPOCH] }); return v }
+            /* with a manual price, scale the curve so it ends at units x that price and starts at cost */
+            function valueAt(h, day) {
+                var v = rawAt(h, day);
+                if (h.mp && h.avg > 0 && h.u > 0 && day >= h.s) {
+                    var rt = rawAt(h, TODAY);
+                    if (rt > 0) {
+                        var target = h.u * (h.mp.c === 'IDR' ? h.mp.v / CUR.rate : h.mp.v), f = target / rt, span = TODAY - h.s, w = span > 0 ? (day - h.s) / span : 1;
+                        v *= 1 + (f - 1) * w;
+                    }
+                }
+                return v;
+            }
             function costAt(h, day) { var c = 0; h.lots.forEach(function (l) { if (l.d <= day) c += l.amt }); return c }
             function norm(h) { h.m = 0; h.s = Infinity; h.lots.forEach(function (l) { h.m += l.amt; if (l.d < h.s) h.s = l.d }) }
 
@@ -1911,7 +1933,7 @@
             var hold = [], sel = null, KEY = 'invclay-crypto';
             try { var raw = localStorage.getItem(KEY); if (raw) { hold = JSON.parse(raw).filter(function (h) { return h && h.t && ((h.lots && h.lots.length) || (h.m > 0 && h.s)) }) } } catch (e) { }
             function save() { try { localStorage.setItem(KEY, JSON.stringify(hold)) } catch (e) { } }
-            hold.forEach(function (h) { if (!h.lots) h.lots = [{ d: h.s, amt: h.m }]; if (h.avg === undefined) h.avg = null; norm(h) });
+            hold.forEach(function (h) { if (!h.lots) h.lots = [{ d: h.s, amt: h.m }]; if (h.avg === undefined) h.avg = null; if (h.mp === undefined) h.mp = null; norm(h); if (h.avg > 0 && !h.u) h.u = h.m / h.avg });
             var uid = Date.now();
 
             /* series for chart */
@@ -2048,6 +2070,8 @@
             function badge() {
                 var b = $('srcBadge'), list = active();
                 if (!list.length) { b.className = 'badge'; b.textContent = 'Simulasi'; return }
+                var man = list.filter(function (h) { return h.mp && h.avg > 0 }).length;
+                if (man === list.length) { b.className = 'badge live'; b.textContent = 'Harga manual'; return }
                 var rl = list.filter(function (h) { return real[h.t] });
                 if (!rl.length) { b.className = 'badge'; b.textContent = 'Simulasi'; return }
                 var names = []; rl.forEach(function (h) { if (names.indexOf(src[h.t]) < 0) names.push(src[h.t]) });
@@ -2123,7 +2147,7 @@
             var ptm; fName.addEventListener('input', function () { drawPreview(); clearTimeout(ptm); ptm = setTimeout(function () { var t = fName.value.trim().toUpperCase(); if (t && !tried[t]) loadReal(t).then(function () { if (!ov.hidden) drawPreview() }) }, 450) });
             $('prev').addEventListener('click', function () { vm--; if (vm < 0) { vm = 11; vy-- } drawCal() });
             $('next').addEventListener('click', function () { vm++; if (vm > 11) { vm = 0; vy++ } drawCal() });
-            var lastFocus = null, mode = 'add', editId = null, delArmed = false, delBtn = $('del'), fAvg = $('fAvg'), modHintAdd = '', subUsd = '';
+            var lastFocus = null, mode = 'add', editId = null, delArmed = false, delBtn = $('del'), fAvg = $('fAvg'), fPx = $('fPx'), modHintAdd = '', subUsd = '';
             var CFG = { noun: 'koin', tick: 'BTC', mod: '2000', avg: '60000', modI: '30000000', avgI: '1000000000' };
             function find(id) { for (var i = 0; i < hold.length; i++)if (hold[i].id === id) return hold[i]; return null }
             function curBox(h) {
@@ -2148,12 +2172,22 @@
                 if (!subUsd) subUsd = $('dSub').textContent;
                 $('dSub').textContent = subUsd.replace('Semua angka dalam dolar AS.', idr ? 'Semua angka dalam rupiah, dikonversi dengan kurs di halaman.' : 'Semua angka dalam dolar AS.');
                 if (h) { fName.value = h.t; fAvg.value = h.avg > 0 ? +(h.avg * (idr ? CUR.rate : 1)).toPrecision(6) : ''; curBox(h) }
+                $('pxFld').hidden = !h; fPx.placeholder = idr ? 'mis. 95.79' : 'mis. 0.0053';
+                if (h && h.mp) { var uv = h.mp.c === 'IDR' ? h.mp.v / CUR.rate : h.mp.v; fPx.value = +(idr ? uv * CUR.rate : uv).toPrecision(6) }
                 var p = parts(TODAY); vy = p.y; vm = p.m; setPick(TODAY);
-                ov.hidden = false; setTimeout(function () { (h ? fMod : fName).focus() }, 30);
+                updUnits(); ov.hidden = false; setTimeout(function () { (h ? fMod : fName).focus() }, 30);
             }
             function closeDlg() { ov.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus() }
             $('gfAdd').addEventListener('click', function () { openDlg() });
             $('cancel').addEventListener('click', closeDlg);
+            function updUnits() {
+                var uh = $('unitHint'), avg = parseFloat(fAvg.value);
+                if (!(avg > 0)) { uh.textContent = ''; return }
+                var cur = (mode === 'edit' && find(editId)) ? find(editId).m * (CUR.c === 'IDR' ? CUR.rate : 1) : 0;
+                var tot = cur + (parseFloat(fMod.value) || 0);
+                uh.textContent = tot > 0 ? 'Perkiraan jumlah unit: ' + nu(tot / avg) + ' (modal dibagi harga rata-rata)' : '';
+            }
+            fMod.addEventListener('input', updUnits); fAvg.addEventListener('input', updUnits);
             $('allBtn').addEventListener('click', function () { sel = null; render() });
             ov.addEventListener('pointerdown', function (e) { if (e.target === ov) closeDlg() });
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (!ov.hidden) closeDlg(); else if (isOpen) { setOpen(false); hit.focus() } setDd(false) } });
@@ -2174,10 +2208,15 @@
                     h = { id: ++uid, t: t, avg: aTxt ? avg / k : null, lots: [{ d: pick, amt: m / k }] }; norm(h); hold.push(h); sel = null;
                 } else {
                     h = find(editId); if (!h) { closeDlg(); return }
+                    var pxTxt = fPx.value.trim(), pv = parseFloat(pxTxt);
                     if (mTxt && !(m > 0)) { err.textContent = 'Isi tambahan modal dengan angka lebih dari 0.'; fMod.focus(); return }
                     if (aTxt && !(avg > 0)) { err.textContent = 'Harga rata-rata harus angka lebih dari 0.'; fAvg.focus(); return }
-                    if (mTxt) { if (!pick) { err.textContent = 'Pilih tanggal pada kalender.'; return } h.lots.push({ d: pick, amt: m / k }) }
-                    h.avg = aTxt ? avg / k : null; norm(h); sel = h.id;
+                    if (pxTxt && !(pv > 0)) { err.textContent = 'Harga sekarang harus angka lebih dari 0.'; fPx.focus(); return }
+                    if (pxTxt && !aTxt) { err.textContent = 'Isi harga rata-rata dulu agar jumlah unit diketahui.'; fAvg.focus(); return }
+                    if (mTxt && !pick) { err.textContent = 'Pilih tanggal pada kalender.'; return }
+                    if (mTxt) h.lots.push({ d: pick, amt: m / k });
+                    h.avg = aTxt ? avg / k : null; norm(h);
+                    h.mp = pxTxt ? { v: pv, c: CUR.c } : null; h.u = h.avg > 0 ? h.m / h.avg : 0; sel = h.id;
                 }
                 save(); closeDlg(); render(); ensureReal(hold.map(function (x) { return x.t }));
                 if (mode === 'add') { front.classList.remove('bump'); void front.offsetWidth; front.classList.add('bump'); setOpen(true) }
