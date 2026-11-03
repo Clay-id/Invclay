@@ -195,7 +195,13 @@
             box-shadow: 0 10px 30px rgba(10, 20, 30, .14)
         }
 
-        .drop button {
+        .drop a {
+            display: block;
+            text-decoration: none
+        }
+
+        .drop button,
+        .drop a {
             width: 100%;
             text-align: left;
             font: 500 15px var(--fb);
@@ -207,7 +213,8 @@
             cursor: pointer
         }
 
-        .drop button:hover {
+        .drop button:hover,
+        .drop a:hover {
             background: var(--bg)
         }
 
@@ -497,6 +504,7 @@
                         <li><button data-asset="us">Saham AS<span class="k">US</span></button></li>
                         <li><button data-asset="id">Saham RI<span class="k">ID</span></button></li>
                         <li><button data-asset="crypto">Crypto<span class="k">BTC</span></button></li>
+                        <li><a href="tabungan.html">Tabungan<span class="k">IDR</span></a></li>
                     </ul>
                 </li>
                 <li><a href="about.html">About</a></li>
@@ -556,6 +564,7 @@
                         <li><button data-asset="us">Saham AS</button></li>
                         <li><button data-asset="id">Saham RI</button></li>
                         <li><button data-asset="crypto">Crypto</button></li>
+                        <li><a href="tabungan.html">Tabungan</a></li>
                     </ul>
                 </nav>
                 <nav class="f-col" aria-label="Invclay">
