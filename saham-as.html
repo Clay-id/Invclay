@@ -1616,6 +1616,7 @@
                         <li><a href="saham-as.html" aria-current="page">Saham AS<span class="k">US</span></a></li>
                         <li><a href="saham-ri.html">Saham RI<span class="k">ID</span></a></li>
                         <li><a href="crypto.html">Crypto<span class="k">BTC</span></a></li>
+                        <li><a href="tabungan.html">Tabungan<span class="k">IDR</span></a></li>
                     </ul>
                 </li>
                 <li><a href="about.html">About</a></li>
@@ -1792,6 +1793,7 @@
                         <li><a href="saham-as.html">Saham AS</a></li>
                         <li><a href="saham-ri.html">Saham RI</a></li>
                         <li><a href="crypto.html">Crypto</a></li>
+                        <li><a href="tabungan.html">Tabungan</a></li>
                     </ul>
                 </nav>
                 <nav class="f-col" aria-label="Invclay">
@@ -1854,7 +1856,9 @@
                 <div class="fld"><label for="fAvg">Harga rata-rata per unit <span
                             class="opt">(opsional)</span></label><input id="fAvg" type="number" inputmode="decimal"
                         min="0" step="any">
-                    <div class="hint">Dicatat untuk perhitungan unit. Tidak mengubah grafik simulasi.</div>
+                    <div class="hint">Harga beli rata-rata per unit. Pakai titik untuk desimal, misalnya 156.719.
+                        Dicatat untuk menghitung jumlah unit.</div>
+                    <div class="hint" id="unitHint"></div>
                 </div>
                 <p class="err" id="err" role="alert"></p>
                 <div class="btns"><button class="btn pri" type="submit">Simpan</button><button class="btn" type="button"
@@ -1898,10 +1902,10 @@
                 fU0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
                 fUS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumSignificantDigits: 4 }),
                 fI = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }),
-                fIS = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumSignificantDigits: 4 });
+                fIS = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumSignificantDigits: 6 });
             var usd = { format: function (v) { return CUR.c === 'IDR' ? fI.format(v * CUR.rate) : fU.format(v) } };
             var usd0 = { format: function (v) { return CUR.c === 'IDR' ? fI.format(v * CUR.rate) : fU0.format(v) } };
-            function pfmt(v) { if (CUR.c === 'IDR') { var x = v * CUR.rate; return x >= 100 ? fI.format(x) : fIS.format(x) } return v >= 1 ? fU.format(v) : fUS.format(v) }
+            function pfmt(v) { if (CUR.c === 'IDR') { var x = v * CUR.rate; return x >= 1000 ? fI.format(x) : fIS.format(x) } return v >= 1 ? fU.format(v) : fUS.format(v) }
             function nu(v) { return v.toLocaleString('en-US', { maximumFractionDigits: 4 }) }
             function cID(v) { var a = Math.abs(v); if (a >= 1e9) return (v / 1e9).toFixed(1).replace('.', ',') + ' M'; if (a >= 1e6) return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace('.', ',') + ' jt'; if (a >= 1e3) return (v / 1e3).toFixed(0) + ' rb'; return v.toFixed(0) }
             function ax(v) { return CUR.c === 'IDR' ? cID(v * CUR.rate) : '$' + compact(v) }
@@ -2228,11 +2232,19 @@
                 $('dSub').textContent = subUsd.replace('Semua angka dalam dolar AS.', idr ? 'Semua angka dalam rupiah, dikonversi dengan kurs di halaman.' : 'Semua angka dalam dolar AS.');
                 if (h) { fName.value = h.t; fAvg.value = h.avg > 0 ? +(h.avg * (idr ? CUR.rate : 1)).toPrecision(6) : ''; curBox(h) }
                 var p = parts(TODAY); vy = p.y; vm = p.m; setPick(TODAY);
-                ov.hidden = false; setTimeout(function () { (h ? fMod : fName).focus() }, 30);
+                updUnits(); ov.hidden = false; setTimeout(function () { (h ? fMod : fName).focus() }, 30);
             }
             function closeDlg() { ov.hidden = true; if (lastFocus && lastFocus.focus) lastFocus.focus() }
             $('gfAdd').addEventListener('click', function () { openDlg() });
             $('cancel').addEventListener('click', closeDlg);
+            function updUnits() {
+                var uh = $('unitHint'), avg = parseFloat(fAvg.value);
+                if (!(avg > 0)) { uh.textContent = ''; return }
+                var cur = (mode === 'edit' && find(editId)) ? find(editId).m * (CUR.c === 'IDR' ? CUR.rate : 1) : 0;
+                var tot = cur + (parseFloat(fMod.value) || 0);
+                uh.textContent = tot > 0 ? 'Perkiraan jumlah unit: ' + nu(tot / avg) + ' (modal dibagi harga rata-rata)' : '';
+            }
+            fMod.addEventListener('input', updUnits); fAvg.addEventListener('input', updUnits);
             $('allBtn').addEventListener('click', function () { sel = null; render() });
             ov.addEventListener('pointerdown', function (e) { if (e.target === ov) closeDlg() });
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (!ov.hidden) closeDlg(); else if (isOpen) { setOpen(false); hit.focus() } setDd(false) } });
